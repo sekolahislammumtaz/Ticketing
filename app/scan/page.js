@@ -126,9 +126,12 @@ export default function TicketScannerPage() {
     setIsScanning(false);
   }
 
+  const isProcessingRef = useRef(false);
+  const lastScanCodeRef = useRef('');
+  const lastScanTimeRef = useRef(0);
+
   // Handle scanned code
   const onQrCodeSuccess = async (decodedText) => {
-    if (isProcessing) return;
     processTicketCode(decodedText);
   };
 
@@ -137,12 +140,21 @@ export default function TicketScannerPage() {
   };
 
   async function processTicketCode(codeToScan) {
-    if (!codeToScan || isProcessing) return;
+    const cleanCode = (codeToScan || '').trim().toUpperCase();
+    const now = Date.now();
+
+    if (!cleanCode) return;
+    if (isProcessingRef.current) return;
+    if (lastScanCodeRef.current === cleanCode && now - lastScanTimeRef.current < 4000) return;
+
+    isProcessingRef.current = true;
+    lastScanCodeRef.current = cleanCode;
+    lastScanTimeRef.current = now;
     setIsProcessing(true);
 
     try {
       const result = await scanTicket(
-        codeToScan, 
+        cleanCode, 
         activeScannerUser?.name || activeScannerUser?.username || 'Petugas Scanner'
       );
 
@@ -162,9 +174,10 @@ export default function TicketScannerPage() {
       } else if (result.reason === 'ALREADY_USED') {
         playAudioBeep('ERROR');
 
+        const scannerName = result.participant?.scanned_by || 'Petugas Scanner';
         const scanObj = {
           status: 'USED',
-          message: 'Tiket telah digunakan!', // Requirement 8
+          message: result.message || `Tiket Sudah Pernah di Scan oleh ${scannerName}`,
           participant: result.participant,
           time: new Date().toLocaleTimeString('id-ID'),
         };
@@ -177,7 +190,7 @@ export default function TicketScannerPage() {
         const scanObj = {
           status: 'NOT_FOUND',
           message: 'Tiket Tidak Ditemukan!',
-          code: codeToScan,
+          code: cleanCode,
           time: new Date().toLocaleTimeString('id-ID'),
         };
 
@@ -187,10 +200,11 @@ export default function TicketScannerPage() {
     } catch (err) {
       console.error('Scan processing error:', err);
     } finally {
-      // Pause 2 seconds before accepting next scan
+      // Pause 2.5 seconds before accepting next scan
       setTimeout(() => {
+        isProcessingRef.current = false;
         setIsProcessing(false);
-      }, 2000);
+      }, 2500);
     }
   }
 
