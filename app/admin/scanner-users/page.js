@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Lock, UserPlus, Trash2, ShieldCheck, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getScannerUsers, addScannerUser, deleteScannerUser } from '@/lib/data-service';
 
 export default function ScannerUsersPage() {
+  const router = useRouter();
   const [scanners, setScanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -16,8 +18,13 @@ export default function ScannerUsersPage() {
   const [name, setName] = useState('');
 
   useEffect(() => {
+    const isAuth = localStorage.getItem('ticketing_admin_auth') === 'true';
+    if (!isAuth) {
+      router.push('/admin');
+      return;
+    }
     loadScanners();
-  }, []);
+  }, [router]);
 
   async function loadScanners() {
     setLoading(true);

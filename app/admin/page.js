@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   Calendar, MapPin, Clock, Users, Upload, Download, FileText, FileSpreadsheet, 
   Plus, Trash2, Search, ArrowLeft, CheckCircle2, ShieldCheck, QrCode, RefreshCw, 
-  UserPlus, AlertCircle, Database, Lock, Eye, X, Check
+  UserPlus, AlertCircle, Database, Lock, Eye, X, Check, LogOut
 } from 'lucide-react';
 import { 
   getEventInfo, saveEventInfo, getParticipants, addParticipant, 
@@ -16,6 +16,10 @@ import { parseExcelParticipants, exportParticipantsToExcel } from '@/lib/excel-h
 import { exportTicketsToWord } from '@/lib/docx-exporter';
 
 export default function AdminPage() {
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [adminPassError, setAdminPassError] = useState('');
+
   const [eventInfo, setEventInfo] = useState({
     name: '',
     date: '',
@@ -27,6 +31,7 @@ export default function AdminPage() {
   const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, HADIR, BELUM
+  const [exportDivision, setExportDivision] = useState('ALL'); // Division filter for Word export
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -45,8 +50,26 @@ export default function AdminPage() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    const isAuth = localStorage.getItem('ticketing_admin_auth') === 'true';
+    setIsAdminAuth(isAuth);
     loadAllData();
   }, []);
+
+  function handleAdminLogin(e) {
+    e.preventDefault();
+    if (adminPasswordInput === 'SiMumtaz123') {
+      localStorage.setItem('ticketing_admin_auth', 'true');
+      setIsAdminAuth(true);
+      setAdminPassError('');
+    } else {
+      setAdminPassError('Password Admin salah! Silakan coba lagi.');
+    }
+  }
+
+  function handleAdminLogout() {
+    localStorage.removeItem('ticketing_admin_auth');
+    setIsAdminAuth(false);
+  }
 
   async function loadAllData() {
     setLoading(true);
@@ -168,6 +191,28 @@ export default function AdminPage() {
     setQrModalDataUrl(dataUrl);
   }
 
+  // Extract list of unique divisions
+  const uniqueDivisions = Array.from(
+    new Set(participants.map(p => (p.division || 'Umum').trim()))
+  ).filter(Boolean).sort();
+
+  function handleWordExport() {
+    const filtered = exportDivision === 'ALL'
+      ? participants
+      : participants.filter(p => (p.division || 'Umum').trim().toLowerCase() === exportDivision.toLowerCase());
+
+    if (filtered.length === 0) {
+      alert(`Tidak ada data peserta untuk divisi "${exportDivision}"!`);
+      return;
+    }
+
+    exportTicketsToWord(
+      eventInfo, 
+      filtered, 
+      exportDivision === 'ALL' ? '' : exportDivision
+    );
+  }
+
   // Filter Participants
   const filteredParticipants = participants.filter(p => {
     const matchesSearch = 
@@ -183,6 +228,62 @@ export default function AdminPage() {
   });
 
   const totalHadir = participants.filter(p => p.status === 'Hadir').length;
+
+  if (!isAdminAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4">
+        <header className="py-4">
+          <Link href="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
+          </Link>
+        </header>
+
+        <main className="max-w-sm w-full mx-auto my-auto space-y-6">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center mx-auto shadow-xl shadow-sky-500/10">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-extrabold text-white">Login Admin Acara</h1>
+            <p className="text-xs text-slate-400">Masukkan password admin untuk mengakses dashboard</p>
+          </div>
+
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-2xl space-y-4">
+            {adminPassError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <span>{adminPassError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password Admin</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Masukkan password admin"
+                  value={adminPasswordInput}
+                  onChange={e => setAdminPasswordInput(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 font-semibold text-sm text-white transition-all shadow-lg shadow-sky-600/20 flex items-center justify-center gap-2 mt-2"
+              >
+                <Lock className="w-4 h-4" /> Masuk Admin
+              </button>
+            </form>
+          </div>
+        </main>
+
+        <footer className="py-4 text-center text-xs text-slate-600">
+          Event Ticket Admin Portal
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
@@ -212,6 +313,14 @@ export default function AdminPage() {
             >
               <Lock className="w-4 h-4 text-sky-400" /> User Scanner (Max 10)
             </Link>
+
+            <button
+              onClick={handleAdminLogout}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold hover:bg-red-500/20 transition-all"
+              title="Keluar Admin"
+            >
+              <LogOut className="w-4 h-4" /> Keluar Admin
+            </button>
 
             <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
               isSupabaseConfigured 
@@ -356,18 +465,38 @@ export default function AdminPage() {
             </label>
           </div>
 
-          {/* Action Card 2: Export Tickets to Word (.docx) */}
+          {/* Action Card 2: Export Tickets to Word (.docx) per Division */}
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
             <div>
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3">
                 <FileText className="w-5 h-5" />
               </div>
               <h3 className="font-bold text-white text-base mb-1">Ekspor Tiket Word</h3>
-              <p className="text-xs text-slate-400">Unduh dokumen Word (.docx) berisi QR code, Nama, Divisi siap cetak.</p>
+              <p className="text-xs text-slate-400 mb-3">Unduh dokumen Word (.docx) tiket QR per divisi / semua divisi.</p>
+
+              {/* Division Selector */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-semibold text-slate-400">Pilih Divisi Tiket:</label>
+                <select
+                  value={exportDivision}
+                  onChange={e => setExportDivision(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-sky-300 focus:outline-none focus:border-sky-500 font-medium"
+                >
+                  <option value="ALL">Semua Divisi ({participants.length} Tiket)</option>
+                  {uniqueDivisions.map((divName, idx) => {
+                    const count = participants.filter(p => (p.division || 'Umum').trim().toLowerCase() === divName.toLowerCase()).length;
+                    return (
+                      <option key={idx} value={divName}>
+                        Divisi: {divName} ({count} Tiket)
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
 
             <button
-              onClick={() => exportTicketsToWord(eventInfo, participants)}
+              onClick={handleWordExport}
               disabled={participants.length === 0}
               className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20"
             >
