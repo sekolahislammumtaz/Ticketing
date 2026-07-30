@@ -5,15 +5,16 @@ import Link from 'next/link';
 import { 
   Calendar, MapPin, Clock, Users, Upload, Download, FileText, FileSpreadsheet, 
   Plus, Trash2, Search, ArrowLeft, CheckCircle2, ShieldCheck, QrCode, RefreshCw, 
-  UserPlus, AlertCircle, Database, Lock, Eye, X, Check, LogOut
+  UserPlus, AlertCircle, Database, Lock, Eye, X, Check, LogOut, Pencil, Mail, Send, MessageSquare, Phone
 } from 'lucide-react';
 import { 
   getEventInfo, saveEventInfo, getParticipants, addParticipant, 
-  importParticipants, deleteParticipant, clearAllParticipants, isSupabaseConfigured 
+  importParticipants, updateParticipant, deleteParticipant, clearAllParticipants, isSupabaseConfigured 
 } from '@/lib/data-service';
 import { generateTicketCode, generateQRCodeDataUrl } from '@/lib/ticket-generator';
 import { parseExcelParticipants, exportParticipantsToExcel } from '@/lib/excel-helper';
 import { exportTicketsToWord } from '@/lib/docx-exporter';
+import { createWhatsAppTicketUrl } from '@/lib/whatsapp-helper';
 
 export default function AdminPage() {
   const [isAdminAuth, setIsAdminAuth] = useState(false);
@@ -35,12 +36,22 @@ export default function AdminPage() {
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(null); // participant object being edited
   const [showQrModal, setShowQrModal] = useState(null); // participant object
   const [showImportSuccessToast, setShowImportSuccessToast] = useState('');
   const [qrModalDataUrl, setQrModalDataUrl] = useState('');
+  const [sendingEmailId, setSendingEmailId] = useState(null);
 
   // New Participant Form State
   const [newParticipant, setNewParticipant] = useState({
+    name: '',
+    division: '',
+    whatsapp: '',
+    email: '',
+  });
+
+  // Edit Participant Form State
+  const [editForm, setEditForm] = useState({
     name: '',
     division: '',
     whatsapp: '',
@@ -85,6 +96,51 @@ export default function AdminPage() {
     }
   }
 
+  // Trigger Send Ticket Email (Req: Kirim email tiket otomatis jika ada email)
+  async function triggerSendTicketEmail(participant, silent = false) {
+    if (!participant.email || !participant.email.includes('@')) {
+      if (!silent) alert('Peserta tidak memiliki alamat email yang valid.');
+      return;
+    }
+    setSendingEmailId(participant.id);
+    try {
+      const res = await fetch('/api/send-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: participant.email,
+          name: participant.name,
+          division: participant.division,
+          ticketCode: participant.ticket_code,
+          eventInfo,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (!silent) {
+          alert(data.message || `Email tiket berhasil dikirim ke ${participant.email}!`);
+        }
+      } else {
+        if (!silent) alert(`Gagal mengirim email: ${data.message}`);
+      }
+    } catch (err) {
+      console.error('Send email error:', err);
+      if (!silent) alert(`Terjadi kesalahan pengiriman email: ${err.message}`);
+    } finally {
+      setSendingEmailId(null);
+    }
+  }
+
+  // Open WhatsApp with pre-filled ticket message & link
+  function handleOpenWhatsApp(participant) {
+    const url = createWhatsAppTicketUrl(participant, eventInfo);
+    if (!url) {
+      alert('Nomor WhatsApp peserta tidak valid atau kosong.');
+      return;
+    }
+    window.open(url, '_blank');
+  }
+
   // Save Event Details Form
   async function handleSaveEvent(e) {
     e.preventDefault();
@@ -100,7 +156,7 @@ export default function AdminPage() {
     }
   }
 
-  // Handle Excel File Import (Req #4, #5, #1, #2)
+  // Handle Excel File Import (Req #4, #5, #1, #2 & Automatic Ticket Emailing)
   async function handleFileUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -118,12 +174,23 @@ export default function AdminPage() {
       }
 
       const imported = await importParticipants(eventInfo.id, parsedList);
-      setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta baru dengan nomor tiket QR unik!`);
-      setTimeout(() => setShowImportSuccessToast(''), 5000);
 
       // Refresh list
       const updatedPts = await getParticipants(eventInfo.id);
       setParticipants(updatedPts);
+
+      // Trigger automatic email sending for imported participants with email
+      const withEmail = imported.filter(p => p.email && p.email.includes('@'));
+      if (withEmail.length > 0) {
+        setShowImportSuccessToast(`Mengimpor ${imported.length} peserta. Mengirim ${withEmail.length} email tiket otomatis...`);
+        for (const p of withEmail) {
+          await triggerSendTicketEmail(p, true);
+        }
+        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta! Tiket QR otomatis dikirim ke ${withEmail.length} email.`);
+      } else {
+        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta baru dengan nomor tiket QR unik!`);
+      }
+      setTimeout(() => setShowImportSuccessToast(''), 6000);
     } catch (err) {
       console.error('Import error:', err);
       alert('Gagal mengimpor file Excel: ' + err.message);
@@ -144,7 +211,7 @@ export default function AdminPage() {
       const existingCodes = new Set(participants.map(p => p.ticket_code));
       const ticketCode = generateTicketCode(existingCodes);
 
-      await addParticipant(eventInfo.id, {
+      const created = await addParticipant(eventInfo.id, {
         name: newParticipant.name,
         division: newParticipant.division,
         whatsapp: newParticipant.whatsapp,
@@ -155,10 +222,46 @@ export default function AdminPage() {
       setNewParticipant({ name: '', division: '', whatsapp: '', email: '' });
       setShowAddModal(false);
 
+      if (created?.email && created?.email.includes('@')) {
+        triggerSendTicketEmail(created, true);
+        alert(`Peserta berhasil ditambahkan & email tiket otomatis dikirim ke ${created.email}!`);
+      }
+
       const updated = await getParticipants(eventInfo.id);
       setParticipants(updated);
     } catch (err) {
       alert('Gagal menambah peserta: ' + err.message);
+    }
+  }
+
+  // Open Edit Modal
+  function openEditModal(participant) {
+    setShowEditModal(participant);
+    setEditForm({
+      name: participant.name || '',
+      division: participant.division || '',
+      whatsapp: participant.whatsapp || '',
+      email: participant.email || '',
+    });
+  }
+
+  // Save Edit Participant
+  async function handleSaveEditParticipant(e) {
+    e.preventDefault();
+    if (!editForm.name || !editForm.division) {
+      alert('Nama dan Divisi wajib diisi!');
+      return;
+    }
+
+    try {
+      await updateParticipant(showEditModal.id, editForm);
+      setShowEditModal(null);
+
+      const updated = await getParticipants(eventInfo.id);
+      setParticipants(updated);
+      alert('Data peserta berhasil diperbarui!');
+    } catch (err) {
+      alert('Gagal meng-edit data peserta: ' + err.message);
     }
   }
 
@@ -657,7 +760,33 @@ export default function AdminPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {p.whatsapp && (
+                            <button
+                              onClick={() => handleOpenWhatsApp(p)}
+                              className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                              title="Kirim Tiket via WhatsApp (Click-to-Chat)"
+                            >
+                              <MessageSquare className="w-4 h-4 text-emerald-400" />
+                            </button>
+                          )}
+                          {p.email && p.email.includes('@') && (
+                            <button
+                              onClick={() => triggerSendTicketEmail(p, false)}
+                              disabled={sendingEmailId === p.id}
+                              className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 disabled:opacity-50 transition-colors"
+                              title="Kirim / Resend Email Tiket"
+                            >
+                              {sendingEmailId === p.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openEditModal(p)}
+                            className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                            title="Edit Data Peserta"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => openQrModal(p)}
                             className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 transition-colors"
@@ -792,6 +921,80 @@ export default function AdminPage() {
                 <CheckCircle2 className="w-4 h-4" /> Telah Di-Scan (Hadir)
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Participant */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-lg text-white">Edit Data Peserta</h3>
+              <button onClick={() => setShowEditModal(null)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditParticipant} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama Lengkap *</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi / Bagian *</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.division}
+                  onChange={e => setEditForm({ ...editForm, division: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp (Opsional)</label>
+                <input
+                  type="text"
+                  value={editForm.whatsapp}
+                  onChange={e => setEditForm({ ...editForm, whatsapp: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Alamat Email (Opsional)</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/20"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
