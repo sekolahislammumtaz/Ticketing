@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
 import QRCode from 'qrcode';
-
-const resendApiKey = process.env.RESEND_API_KEY || '';
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const { email, name, division, ticketCode, eventInfo } = body;
+
+    const resendApiKey = process.env.RESEND_API_KEY || '';
+    let resend = null;
+
+    if (resendApiKey) {
+      try {
+        const { Resend } = await import('resend');
+        resend = new Resend(resendApiKey);
+      } catch (e) {
+        console.warn('Resend package not available:', e);
+      }
+    }
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ success: false, message: 'Alamat email tidak valid.' }, { status: 400 });
