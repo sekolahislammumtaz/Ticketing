@@ -139,6 +139,27 @@ export default function TicketScannerPage() {
     // Ignore minor frame read errors
   };
 
+  function pauseScanner() {
+    try {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.pause(true);
+      }
+    } catch (e) {
+      console.log('Pause scanner error:', e);
+    }
+  }
+
+  function resumeScanner() {
+    try {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.resume();
+      }
+    } catch (e) {
+      console.log('Resume scanner error:', e);
+      startScanner();
+    }
+  }
+
   async function processTicketCode(codeToScan) {
     const cleanCode = (codeToScan || '').trim().toUpperCase();
     const now = Date.now();
@@ -151,6 +172,9 @@ export default function TicketScannerPage() {
     lastScanCodeRef.current = cleanCode;
     lastScanTimeRef.current = now;
     setIsProcessing(true);
+
+    // Immediately pause camera feed so no subsequent frames are read while pop-up modal is open
+    pauseScanner();
 
     try {
       const result = await scanTicket(
@@ -199,13 +223,19 @@ export default function TicketScannerPage() {
       }
     } catch (err) {
       console.error('Scan processing error:', err);
-    } finally {
-      // Pause 2.5 seconds before accepting next scan
-      setTimeout(() => {
-        isProcessingRef.current = false;
-        setIsProcessing(false);
-      }, 2500);
+      resumeScanner();
+      isProcessingRef.current = false;
+      setIsProcessing(false);
     }
+  }
+
+  function handleCloseModalAndContinue() {
+    setScanResult(null);
+    resumeScanner();
+    setTimeout(() => {
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+    }, 500);
   }
 
   function handleManualSubmit(e) {
@@ -281,52 +311,88 @@ export default function TicketScannerPage() {
           )}
         </div>
 
-        {/* Dynamic Scan Result Banner (Requirements #8 & #10) */}
-        {scanResult && (
-          <div className={`rounded-2xl p-5 border shadow-2xl transition-all animate-in fade-in duration-300 ${
-            scanResult.status === 'SUCCESS' 
-              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-100' 
-              : scanResult.status === 'USED' 
-                ? 'bg-amber-500/10 border-amber-500/40 text-amber-100' 
-                : 'bg-red-500/10 border-red-500/40 text-red-100'
-          }`}>
-            <div className="flex items-start gap-3">
-              {scanResult.status === 'SUCCESS' && <CheckCircle2 className="w-7 h-7 text-emerald-400 flex-shrink-0" />}
-              {scanResult.status === 'USED' && <AlertTriangle className="w-7 h-7 text-amber-400 flex-shrink-0" />}
-              {scanResult.status === 'NOT_FOUND' && <XCircle className="w-7 h-7 text-red-400 flex-shrink-0" />}
-
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className={`font-extrabold text-base ${
-                    scanResult.status === 'SUCCESS' ? 'text-emerald-400' : scanResult.status === 'USED' ? 'text-amber-400' : 'text-red-400'
-                  }`}>
-                    {scanResult.message}
-                  </h3>
-                  <span className="text-[10px] opacity-70">{scanResult.time}</span>
+      {/* Pop-up Modal Result (Camera Paused until OK is clicked) */}
+      {scanResult && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-5">
+            {/* Header Icon */}
+            <div className="flex justify-center">
+              {scanResult.status === 'SUCCESS' && (
+                <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce">
+                  <CheckCircle2 className="w-12 h-12" />
                 </div>
+              )}
+              {scanResult.status === 'USED' && (
+                <div className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/30 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-500/20 animate-pulse">
+                  <AlertTriangle className="w-12 h-12" />
+                </div>
+              )}
+              {scanResult.status === 'NOT_FOUND' && (
+                <div className="w-20 h-20 rounded-full bg-red-500/10 border-2 border-red-500/30 text-red-400 flex items-center justify-center shadow-xl shadow-red-500/20">
+                  <XCircle className="w-12 h-12" />
+                </div>
+              )}
+            </div>
 
-                {/* Participant Details (Requirement 10: Tampilkan nama dan divisi pada notifikasi) */}
-                {scanResult.participant && (
-                  <div className="pt-2 border-t border-slate-700/50 mt-2 space-y-1">
-                    <div className="text-lg font-bold text-white">{scanResult.participant.name}</div>
-                    <div className="text-xs font-medium text-slate-300">
-                      Divisi: <strong className="text-white">{scanResult.participant.division || '-'}</strong>
-                    </div>
-                    <div className="text-[11px] font-mono text-slate-400">
-                      Kode Tiket: {scanResult.participant.ticket_code}
-                    </div>
+            {/* Title & Message */}
+            <div className="space-y-1">
+              <h2 className={`text-xl font-extrabold ${
+                scanResult.status === 'SUCCESS' 
+                  ? 'text-emerald-400' 
+                  : scanResult.status === 'USED' 
+                    ? 'text-amber-400' 
+                    : 'text-red-400'
+              }`}>
+                {scanResult.message}
+              </h2>
+              <p className="text-[11px] text-slate-400 font-mono">Waktu Scan: {scanResult.time}</p>
+            </div>
 
-                    {scanResult.status === 'USED' && scanResult.participant.scanned_at && (
-                      <div className="text-[11px] text-amber-300 italic pt-1">
-                        Pernah di-scan pada: {new Date(scanResult.participant.scanned_at).toLocaleString('id-ID')}
-                      </div>
-                    )}
+            {/* Participant Details Card */}
+            {scanResult.participant ? (
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left space-y-2">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Nama Peserta</span>
+                  <div className="text-lg font-bold text-white">{scanResult.participant.name}</div>
+                </div>
+                <div className="flex justify-between text-xs pt-2 border-t border-slate-800/80">
+                  <span className="text-slate-400">Divisi:</span>
+                  <strong className="text-sky-300">{scanResult.participant.division || '-'}</strong>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Kode Tiket:</span>
+                  <span className="font-mono font-bold text-white">{scanResult.participant.ticket_code}</span>
+                </div>
+                {scanResult.status === 'USED' && scanResult.participant.scanned_at && (
+                  <div className="text-[11px] text-amber-300 italic pt-1 border-t border-slate-800/80">
+                    Pernah di-scan pada: {new Date(scanResult.participant.scanned_at).toLocaleString('id-ID')}
                   </div>
                 )}
               </div>
-            </div>
+            ) : (
+              scanResult.code && (
+                <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-300">
+                  Kode Tiket: {scanResult.code}
+                </div>
+              )
+            )}
+
+            {/* OK / Continue Scan Button */}
+            <button
+              onClick={handleCloseModalAndContinue}
+              className={`w-full py-3.5 rounded-2xl font-extrabold text-sm text-white transition-all shadow-xl flex items-center justify-center gap-2 ${
+                scanResult.status === 'SUCCESS'
+                  ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20'
+                  : scanResult.status === 'USED'
+                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
+                    : 'bg-red-600 hover:bg-red-500 shadow-red-600/20'
+              }`}
+            >
+              <Check className="w-5 h-5" /> OK / Lanjutkan Scan
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
         {/* Manual Input Backup */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md">
