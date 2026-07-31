@@ -233,7 +233,9 @@ export default function AdminPage() {
 
       if (created?.email && created?.email.includes('@')) {
         triggerSendTicketEmail(created, true);
-        alert(`Peserta berhasil ditambahkan & email tiket otomatis dikirim ke ${created.email}!`);
+        alert(`Peserta "${created.name}" berhasil ditambahkan & email tiket otomatis dikirim!`);
+      } else {
+        alert(`Peserta "${created?.name || newParticipant.name}" berhasil ditambahkan!`);
       }
 
       const updated = await getParticipants(eventInfo.id);
