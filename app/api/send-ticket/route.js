@@ -65,7 +65,7 @@ export async function POST(request) {
               <p>Tiket Masuk Resmi Acara</p>
             </div>
             <div class="body">
-              <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 12px;">Halo <strong>${name}</strong>, berikut adalah E-Tiket QR-Code Anda:</p>
+              <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 12px;">Assalamu'alaikum <strong>${name}</strong>, berikut adalah E-Tiket QR-Code Anda:</p>
               
               <div class="qr-box">
                 <img src="${qrDataUrl}" class="qr-img" alt="QR Code Tiket" />
