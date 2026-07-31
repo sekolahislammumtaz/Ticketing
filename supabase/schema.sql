@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.participants (
   email TEXT,
   ticket_code TEXT NOT NULL,
   status TEXT DEFAULT '',
+  wa_sent BOOLEAN DEFAULT false,
   scanned_at TIMESTAMPTZ,
   scanned_by TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { 
   getEventInfo, saveEventInfo, getParticipants, addParticipant, 
-  importParticipants, updateParticipant, deleteParticipant, clearAllParticipants, isSupabaseConfigured 
+  importParticipants, updateParticipant, markWhatsAppSent, deleteParticipant, clearAllParticipants, isSupabaseConfigured 
 } from '@/lib/data-service';
 import { generateTicketCode, generateQRCodeDataUrl } from '@/lib/ticket-generator';
 import { parseExcelParticipants, exportParticipantsToExcel } from '@/lib/excel-helper';
@@ -132,13 +132,22 @@ export default function AdminPage() {
   }
 
   // Open WhatsApp with pre-filled ticket message & link
-  function handleOpenWhatsApp(participant) {
+  async function handleOpenWhatsApp(participant) {
     const url = createWhatsAppTicketUrl(participant, eventInfo);
     if (!url) {
       alert('Nomor WhatsApp peserta tidak valid atau kosong.');
       return;
     }
     window.open(url, '_blank');
+
+    try {
+      await markWhatsAppSent(participant.id);
+      setParticipants(prev =>
+        prev.map(p => (p.id === participant.id ? { ...p, wa_sent: true } : p))
+      );
+    } catch (err) {
+      console.error('Error marking WA sent:', err);
+    }
   }
 
   // Save Event Details Form
@@ -764,10 +773,14 @@ export default function AdminPage() {
                           {p.whatsapp && (
                             <button
                               onClick={() => handleOpenWhatsApp(p)}
-                              className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-                              title="Kirim Tiket via WhatsApp (Click-to-Chat)"
+                              className={`p-1.5 rounded-lg border transition-colors ${
+                                p.wa_sent
+                                  ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border-blue-500/30'
+                                  : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30'
+                              }`}
+                              title={p.wa_sent ? 'Kirim Ulang Tiket via WhatsApp (Sudah Dikirim)' : 'Kirim Tiket via WhatsApp (Belum Dikirim)'}
                             >
-                              <MessageSquare className="w-4 h-4 text-emerald-400" />
+                              <MessageSquare className={`w-4 h-4 ${p.wa_sent ? 'text-blue-400' : 'text-emerald-400'}`} />
                             </button>
                           )}
                           {p.email && p.email.includes('@') && (
