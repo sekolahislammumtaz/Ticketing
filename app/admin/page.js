@@ -141,7 +141,7 @@ export default function AdminPage() {
     window.open(url, '_blank');
 
     try {
-      await markWhatsAppSent(participant.id);
+      await markWhatsAppSent(participant.id, participant.ticket_code);
       setParticipants(prev =>
         prev.map(p => (p.id === participant.id ? { ...p, wa_sent: true } : p))
       );
