@@ -354,11 +354,9 @@ export default function AdminPage() {
 
         <main className="max-w-sm w-full mx-auto my-auto space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center mx-auto shadow-xl shadow-sky-500/10">
-              <Lock className="w-8 h-8" />
-            </div>
-            <h1 className="text-2xl font-extrabold text-white">Login Admin Acara</h1>
-            <p className="text-xs text-slate-400">Masukkan password admin untuk mengakses dashboard</p>
+            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-16 h-16 object-contain mx-auto drop-shadow mb-2" />
+            <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
+            <p className="text-xs text-slate-400">Login Admin - Masukkan password untuk mengakses dashboard</p>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-2xl space-y-4">
@@ -393,7 +391,7 @@ export default function AdminPage() {
         </main>
 
         <footer className="py-4 text-center text-xs text-slate-600">
-          Event Ticket Admin Portal
+          &copy; {new Date().getFullYear()} Yayasan Munazarah Ticketing
         </footer>
       </div>
     );
@@ -403,7 +401,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
               href="/" 
@@ -412,11 +410,14 @@ export default function AdminPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div>
-              <h1 className="font-bold text-xl text-white flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 text-sky-400" /> Dashboard Admin Acara
-              </h1>
-              <p className="text-xs text-slate-400">Pengelolaan Acara, Peserta & Tiket QR Code</p>
+            <div className="flex items-center gap-3">
+              <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-9 h-9 object-contain drop-shadow" />
+              <div>
+                <h1 className="font-bold text-base sm:text-lg text-white leading-tight">
+                  KAJIAN YAYASAN MUNAZARAH TICKETING
+                </h1>
+                <p className="text-xs text-slate-400">Dashboard Admin & Pengelolaan Tiket</p>
+              </div>
             </div>
           </div>
 
@@ -435,15 +436,6 @@ export default function AdminPage() {
             >
               <LogOut className="w-4 h-4" /> Keluar Admin
             </button>
-
-            <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-              isSupabaseConfigured 
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}>
-              <Database className="w-3 h-3" />
-              {isSupabaseConfigured ? 'Supabase Active' : 'Local Storage Mode'}
-            </span>
           </div>
         </div>
       </header>

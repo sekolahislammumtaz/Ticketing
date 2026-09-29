@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { QrCode, ShieldCheck, Ticket, Calendar, MapPin, Clock, Users, FileSpreadsheet, FileText, Camera, Database, CheckCircle2 } from 'lucide-react';
-import { getEventInfo, getParticipants, isSupabaseConfigured } from '@/lib/data-service';
+import { QrCode, ShieldCheck, Calendar, MapPin, Clock, Users, Camera, CheckCircle2 } from 'lucide-react';
+import { getEventInfo, getParticipants } from '@/lib/data-service';
 
 export default function HomePage() {
   const [eventInfo, setEventInfo] = useState(null);
@@ -32,27 +32,13 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
       {/* Header / Navbar */}
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
-              <Ticket className="w-6 h-6 text-white" />
-            </div>
+            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-10 h-10 object-contain drop-shadow" />
             <div>
-              <h1 className="font-bold text-lg text-white leading-tight">Event Ticket Pass</h1>
+              <h1 className="font-bold text-base sm:text-lg text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
               <p className="text-xs text-sky-400 font-medium">System Ticketing & Scanner QR</p>
             </div>
-          </div>
-
-          {/* Database Status Badge */}
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-              isSupabaseConfigured 
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}>
-              <Database className="w-3.5 h-3.5" />
-              {isSupabaseConfigured ? 'Supabase Connected' : 'Local Storage Mode'}
-            </span>
           </div>
         </div>
       </header>
@@ -63,12 +49,9 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold tracking-wide uppercase">
             <QrCode className="w-4 h-4 text-sky-400" /> System Ticketing QR-Code Unik
           </div>
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Kelola Acara & Scan Tiket <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Lebih Cepat & Mudah</span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            KAJIAN YAYASAN MUNAZARAH <span className="bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">TICKETING SYSTEM</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg">
-            Impor peserta dari Excel, generate nomor tiket alfanumerik 8 karakter, ekspor ke berkas Word (.docx) siap cetak, dan scan tiket dengan kamera HP.
-          </p>
         </div>
 
         {/* Portal Entry Cards */}
@@ -158,7 +141,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Event Ticketing System &bull; Deployed on Vercel & Supabase</p>
+        <p>&copy; {new Date().getFullYear()} Yayasan Munazarah Ticketing</p>
       </footer>
     </div>
   );

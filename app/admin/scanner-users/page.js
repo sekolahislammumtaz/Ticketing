@@ -82,11 +82,14 @@ export default function ScannerUsersPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div>
-              <h1 className="font-bold text-xl text-white flex items-center gap-2">
-                <Lock className="w-5 h-5 text-sky-400" /> Kelola User Tiket Scanner
-              </h1>
-              <p className="text-xs text-slate-400">Buat hingga 10 akun petugas scanner tiket (Requirement #7)</p>
+            <div className="flex items-center gap-3">
+              <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-8 h-8 object-contain drop-shadow" />
+              <div>
+                <h1 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+                  Kelola User Tiket Scanner
+                </h1>
+                <p className="text-xs text-slate-400">KAJIAN YAYASAN MUNAZARAH TICKETING</p>
+              </div>
             </div>
           </div>
 

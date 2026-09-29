@@ -1,8 +1,11 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Event Ticket System - Aplikasi Ticketing Acara & QR Scanner',
-  description: 'Sistem manajemen tiket acara dengan QR code unik 8 alfanumerik, ekspor Word (.docx), scanner kamera mobile, dan sinkronisasi Supabase.',
+  title: 'KAJIAN YAYASAN MUNAZARAH TICKETING',
+  description: 'Sistem manajemen tiket acara dan scanner QR Yayasan Munazarah.',
+  icons: {
+    icon: '/munazarah.png',
+  },
 };
 
 export default function RootLayout({ children }) {

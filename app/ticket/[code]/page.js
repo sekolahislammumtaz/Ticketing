@@ -76,6 +76,7 @@ export default function DigitalTicketPage() {
           
           {/* Top Header */}
           <div className="bg-gradient-to-r from-sky-600 to-blue-700 p-6 text-center text-white space-y-1">
+            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-12 h-12 object-contain mx-auto drop-shadow mb-1" />
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-semibold tracking-wider uppercase mb-1">
               <Ticket className="w-3.5 h-3.5" /> E-Tiket Resmi
             </div>
@@ -137,7 +138,7 @@ export default function DigitalTicketPage() {
       </main>
 
       <footer className="py-4 text-center text-xs text-slate-600">
-        Event Ticket System &bull; Digital E-Pass
+        &copy; {new Date().getFullYear()} Yayasan Munazarah Ticketing
       </footer>
     </div>
   );

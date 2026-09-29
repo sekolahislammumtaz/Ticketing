@@ -49,11 +49,9 @@ export default function ScannerLoginPage() {
 
       <main className="max-w-sm w-full mx-auto my-auto space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/20 mx-auto">
-            <Camera className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-extrabold text-white">Login Tiket Scanner</h1>
-          <p className="text-xs text-slate-400">Masukkan username & password petugas scanner tiket</p>
+          <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-16 h-16 object-contain drop-shadow mx-auto mb-2" />
+          <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
+          <p className="text-xs text-slate-400">Login Petugas Tiket Scanner</p>
         </div>
 
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-2xl space-y-4">
@@ -106,7 +104,7 @@ export default function ScannerLoginPage() {
       </main>
 
       <footer className="py-4 text-center text-xs text-slate-600">
-        Event Ticket Scanner App
+        &copy; {new Date().getFullYear()} Yayasan Munazarah Ticketing
       </footer>
     </div>
   );

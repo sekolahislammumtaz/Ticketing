@@ -101,7 +101,7 @@ export async function POST(request) {
               <p style="font-size: 12px; color: #94a3b8; margin-top: 16px;">Tunjukkan E-Tiket QR Code ini kepada petugas scanner saat memasuki lokasi acara.</p>
             </div>
             <div class="footer">
-              E-Tiket ini dihasilkan secara otomatis oleh Event Ticketing System.
+              E-Tiket ini dihasilkan secara otomatis oleh KAJIAN YAYASAN MUNAZARAH TICKETING.
             </div>
           </div>
         </body>
