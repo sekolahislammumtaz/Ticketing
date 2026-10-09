@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Camera, Lock, ArrowLeft, ShieldAlert, LogIn } from 'lucide-react';
 import { verifyScannerLogin } from '@/lib/data-service';
+import AppLogo from '@/components/Logo';
 
 export default function ScannerLoginPage() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function ScannerLoginPage() {
 
       <main className="max-w-sm w-full mx-auto my-auto space-y-6">
         <div className="text-center space-y-2">
-          <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-16 h-16 object-contain drop-shadow mx-auto mb-2" />
+          <AppLogo className="w-16 h-16 object-contain drop-shadow mx-auto mb-2" />
           <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
           <p className="text-xs text-slate-400">Login Petugas Tiket Scanner</p>
         </div>

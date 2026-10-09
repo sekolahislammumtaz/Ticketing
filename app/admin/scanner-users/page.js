@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Lock, UserPlus, Trash2, ShieldCheck, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getScannerUsers, addScannerUser, deleteScannerUser } from '@/lib/data-service';
+import AppLogo from '@/components/Logo';
 
 export default function ScannerUsersPage() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export default function ScannerUsersPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-8 h-8 object-contain drop-shadow" />
+              <AppLogo className="w-8 h-8 object-contain drop-shadow" />
               <div>
                 <h1 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
                   Kelola User Tiket Scanner

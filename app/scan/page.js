@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { scanTicket } from '@/lib/data-service';
 import confetti from 'canvas-confetti';
+import AppLogo from '@/components/Logo';
 
 export default function TicketScannerPage() {
   const router = useRouter();
@@ -260,7 +261,7 @@ export default function TicketScannerPage() {
       <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-8 h-8 object-contain drop-shadow" />
+            <AppLogo className="w-8 h-8 object-contain drop-shadow" />
             <div>
               <h1 className="font-bold text-xs text-white leading-tight">KAJIAN YAYASAN MUNAZARAH</h1>
               <p className="text-[11px] text-emerald-400 font-medium">

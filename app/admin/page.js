@@ -15,6 +15,7 @@ import { generateTicketCode, generateQRCodeDataUrl } from '@/lib/ticket-generato
 import { parseExcelParticipants, exportParticipantsToExcel } from '@/lib/excel-helper';
 import { exportTicketsToWord } from '@/lib/docx-exporter';
 import { createWhatsAppTicketUrl } from '@/lib/whatsapp-helper';
+import AppLogo from '@/components/Logo';
 
 export default function AdminPage() {
   const [isAdminAuth, setIsAdminAuth] = useState(false);
@@ -231,6 +232,10 @@ export default function AdminPage() {
       setNewParticipant({ name: '', division: '', whatsapp: '', email: '' });
       setShowAddModal(false);
 
+      if (created) {
+        setParticipants(prev => [created, ...prev.filter(p => p.id !== created.id)]);
+      }
+
       if (created?.email && created?.email.includes('@')) {
         triggerSendTicketEmail(created, true);
         alert(`Peserta "${created.name}" berhasil ditambahkan & email tiket otomatis dikirim!`);
@@ -239,7 +244,9 @@ export default function AdminPage() {
       }
 
       const updated = await getParticipants(eventInfo.id);
-      setParticipants(updated);
+      if (updated && updated.length > 0) {
+        setParticipants(updated);
+      }
     } catch (err) {
       alert('Gagal menambah peserta: ' + err.message);
     }
@@ -354,7 +361,7 @@ export default function AdminPage() {
 
         <main className="max-w-sm w-full mx-auto my-auto space-y-6">
           <div className="text-center space-y-2">
-            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-16 h-16 object-contain mx-auto drop-shadow mb-2" />
+            <AppLogo className="w-16 h-16 object-contain mx-auto drop-shadow mb-2" />
             <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
             <p className="text-xs text-slate-400">Login Admin - Masukkan password untuk mengakses dashboard</p>
           </div>
@@ -411,7 +418,7 @@ export default function AdminPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-9 h-9 object-contain drop-shadow" />
+              <AppLogo className="w-9 h-9 object-contain drop-shadow" />
               <div>
                 <h1 className="font-bold text-base sm:text-lg text-white leading-tight">
                   KAJIAN YAYASAN MUNAZARAH TICKETING

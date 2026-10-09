@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { QrCode, ShieldCheck, Calendar, MapPin, Clock, Users, Camera, CheckCircle2 } from 'lucide-react';
 import { getEventInfo, getParticipants } from '@/lib/data-service';
+import AppLogo from '@/components/Logo';
 
 export default function HomePage() {
   const [eventInfo, setEventInfo] = useState(null);
@@ -34,7 +35,7 @@ export default function HomePage() {
       <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/munazarah.png" alt="Logo Yayasan Munazarah" className="w-10 h-10 object-contain drop-shadow" />
+            <AppLogo className="w-10 h-10 object-contain drop-shadow" />
             <div>
               <h1 className="font-bold text-base sm:text-lg text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
               <p className="text-xs text-sky-400 font-medium">System Ticketing & Scanner QR</p>
