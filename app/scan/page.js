@@ -311,98 +311,170 @@ export default function TicketScannerPage() {
         </div>
 
       {/* Pop-up Modal Result (Camera Paused until OK is clicked) */}
-      {scanResult && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-5">
-            {/* Header Icon */}
-            <div className="flex justify-center">
-              {scanResult.status === 'SUCCESS' && (
-                <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-500/20 animate-bounce">
-                  <CheckCircle2 className="w-12 h-12" />
-                </div>
-              )}
-              {scanResult.status === 'USED' && (
-                <div className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/30 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-500/20 animate-pulse">
-                  <AlertTriangle className="w-12 h-12" />
-                </div>
-              )}
-              {scanResult.status === 'NOT_FOUND' && (
-                <div className="w-20 h-20 rounded-full bg-red-500/10 border-2 border-red-500/30 text-red-400 flex items-center justify-center shadow-xl shadow-red-500/20">
-                  <XCircle className="w-12 h-12" />
-                </div>
-              )}
-            </div>
+      {scanResult && (() => {
+        const p = scanResult.participant;
+        const isAkhwat = p && (
+          p.track === 'Akhwat' || 
+          p.ticket_type === 'Bunda' || 
+          p.ticket_type === 'Akhwat'
+        );
+        const isSuccess = scanResult.status === 'SUCCESS';
+        const isUsed = scanResult.status === 'USED';
+        const isNotFound = scanResult.status === 'NOT_FOUND';
 
-            {/* Title & Message */}
-            <div className="space-y-1">
-              <h2 className={`text-xl font-extrabold ${
-                scanResult.status === 'SUCCESS' 
-                  ? 'text-emerald-400' 
-                  : scanResult.status === 'USED' 
-                    ? 'text-amber-400' 
-                    : 'text-red-400'
-              }`}>
-                {scanResult.message}
-              </h2>
-              <p className="text-[11px] text-slate-400 font-mono">Waktu Scan: {scanResult.time}</p>
-            </div>
+        return (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className={`border rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4 ${
+              isSuccess 
+                ? (isAkhwat 
+                    ? 'bg-gradient-to-b from-slate-900 to-[#1e112a] border-purple-500/60 shadow-purple-950/60' 
+                    : 'bg-gradient-to-b from-slate-900 to-[#0c1527] border-blue-500/60 shadow-blue-950/60')
+                : isUsed 
+                  ? 'bg-slate-900 border-amber-500/60 shadow-amber-950/50' 
+                  : 'bg-slate-900 border-red-500/60 shadow-red-950/50'
+            }`}>
+              
+              {/* Entrance Track Banner (Special for Ikhwan Navy vs Akhwat Purple) */}
+              {p && (
+                <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black tracking-wider uppercase border shadow-md animate-pulse ${
+                  isAkhwat 
+                    ? 'bg-purple-950/90 text-purple-200 border-purple-500/50' 
+                    : 'bg-blue-950/90 text-sky-200 border-blue-500/50'
+                }`}>
+                  {isAkhwat ? '🟣 JALUR AKHWAT (PINTU UNGU)' : '🔵 JALUR IKHWAN (PINTU BIRU NAVY)'}
+                </div>
+              )}
 
-            {/* Participant Details Card */}
-            {scanResult.participant ? (
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left space-y-2">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Nama Peserta</span>
-                  <div className="text-lg font-bold text-white">{scanResult.participant.name}</div>
-                </div>
-                <div className="flex justify-between text-xs pt-2 border-t border-slate-800/80">
-                  <span className="text-slate-400">Divisi:</span>
-                  <strong className="text-sky-300">{scanResult.participant.division || '-'}</strong>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Kode Tiket:</span>
-                  <span className="font-mono font-bold text-white">{scanResult.participant.ticket_code}</span>
-                </div>
-                {scanResult.status === 'USED' && scanResult.participant.scanned_at && (
-                  <div className="text-[11px] text-amber-300 italic pt-1 border-t border-slate-800/80">
-                    Pernah di-scan pada: {new Date(scanResult.participant.scanned_at).toLocaleString('id-ID')}
+              {/* Status Header Icon */}
+              <div className="flex justify-center pt-1">
+                {isSuccess && (
+                  <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center shadow-xl animate-bounce ${
+                    isAkhwat 
+                      ? 'bg-purple-500/20 border-purple-400 text-purple-300 shadow-purple-500/30' 
+                      : 'bg-blue-500/20 border-blue-400 text-sky-300 shadow-blue-500/30'
+                  }`}>
+                    <CheckCircle2 className="w-12 h-12" />
+                  </div>
+                )}
+                {isUsed && (
+                  <div className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-500/20 animate-pulse">
+                    <AlertTriangle className="w-12 h-12" />
+                  </div>
+                )}
+                {isNotFound && (
+                  <div className="w-20 h-20 rounded-full bg-red-500/10 border-2 border-red-500/40 text-red-400 flex items-center justify-center shadow-xl shadow-red-500/20">
+                    <XCircle className="w-12 h-12" />
                   </div>
                 )}
               </div>
-            ) : (
-              scanResult.code && (
-                <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 text-xs font-mono text-slate-300">
-                  Kode Tiket: {scanResult.code}
-                </div>
-              )
-            )}
 
-            {/* OK / Continue Scan Button */}
-            <button
-              onClick={handleCloseModalAndContinue}
-              className={`w-full py-3.5 rounded-2xl font-extrabold text-sm text-white transition-all shadow-xl flex items-center justify-center gap-2 ${
-                scanResult.status === 'SUCCESS'
-                  ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20'
-                  : scanResult.status === 'USED'
-                    ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
-                    : 'bg-red-600 hover:bg-red-500 shadow-red-600/20'
-              }`}
-            >
-              <Check className="w-5 h-5" /> OK / Lanjutkan Scan
-            </button>
+              {/* Title & Message */}
+              <div className="space-y-1">
+                <h2 className={`text-xl font-black ${
+                  isSuccess 
+                    ? (isAkhwat ? 'text-purple-300' : 'text-sky-300')
+                    : isUsed 
+                      ? 'text-amber-400' 
+                      : 'text-red-400'
+                }`}>
+                  {isSuccess 
+                    ? 'Tiket Berhasil di-Scan!' 
+                    : isUsed 
+                      ? 'PERINGATAN: Tiket Sudah Digunakan!' 
+                      : 'Tiket Tidak Ditemukan!'}
+                </h2>
+                <p className={`text-xs font-semibold ${
+                  isSuccess 
+                    ? (isAkhwat ? 'text-purple-400' : 'text-sky-400') 
+                    : isUsed ? 'text-amber-300/90' : 'text-slate-400'
+                }`}>
+                  {scanResult.message}
+                </p>
+                <p className="text-[10px] text-slate-500 font-mono">Waktu Scan: {scanResult.time}</p>
+              </div>
+
+              {/* Participant Details Card */}
+              {p ? (
+                <div className={`border rounded-2xl p-4 text-left space-y-2.5 ${
+                  isAkhwat ? 'bg-purple-950/40 border-purple-500/30' : 'bg-slate-950/80 border-slate-800'
+                }`}>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Nama Siswa / Peserta</span>
+                    <div className="text-lg font-black text-white">{p.name}</div>
+                  </div>
+
+                  {/* Metadata Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-900 border border-slate-700 text-sky-300">
+                      {p.division || '-'}
+                    </span>
+                    {p.class_name && (
+                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-900 border border-slate-700 text-slate-300">
+                        Kelas: {p.class_name}
+                      </span>
+                    )}
+                    {p.ticket_type && (
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                        isAkhwat ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-blue-500/20 text-sky-300 border-blue-500/40'
+                      }`}>
+                        {p.ticket_type}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-800/80">
+                    <span className="text-slate-400">Kode Tiket:</span>
+                    <span className={`font-mono font-bold ${isAkhwat ? 'text-purple-300' : 'text-sky-300'}`}>
+                      {p.ticket_code}
+                    </span>
+                  </div>
+
+                  {isUsed && p.scanned_at && (
+                    <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 space-y-0.5">
+                      <div className="font-bold flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Telah Di-Scan Sebelumnya
+                      </div>
+                      <div>Waktu: {new Date(p.scanned_at).toLocaleString('id-ID')}</div>
+                      {p.scanned_by && <div>Petugas: {p.scanned_by}</div>}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                scanResult.code && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3 text-xs font-mono text-red-300">
+                    Kode Tiket: {scanResult.code}
+                  </div>
+                )
+              )}
+
+              {/* OK / Continue Scan Button */}
+              <button
+                onClick={handleCloseModalAndContinue}
+                className={`w-full py-3.5 rounded-2xl font-black text-sm text-white transition-all shadow-xl flex items-center justify-center gap-2 ${
+                  isSuccess
+                    ? (isAkhwat ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/30' : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30')
+                    : isUsed
+                      ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/20'
+                      : 'bg-red-600 hover:bg-red-500 shadow-red-600/20'
+                }`}
+              >
+                <Check className="w-5 h-5" /> OK / Lanjutkan Scan
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
         {/* Manual Input Backup */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md">
           <form onSubmit={handleManualSubmit} className="flex gap-2">
             <input
               type="text"
-              placeholder="Masukkan 8 kode tiket manual..."
+              placeholder="Ketik kode tiket (misal: MZ-TK-AY-123456)..."
               value={manualCode}
               onChange={e => setManualCode(e.target.value.toUpperCase())}
-              maxLength={8}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase font-mono tracking-widest focus:outline-none focus:border-emerald-500"
+              maxLength={32}
+              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase font-mono tracking-wider focus:outline-none focus:border-emerald-500"
             />
             <button
               type="submit"

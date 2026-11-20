@@ -13,12 +13,29 @@ CREATE TABLE IF NOT EXISTS public.events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Table Participants (Peserta & Tiket)
+-- 2. Table Students (Master Data Siswa)
+CREATE TABLE IF NOT EXISTS public.students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  division TEXT NOT NULL,
+  class_name TEXT NOT NULL,
+  student_name TEXT NOT NULL,
+  parent_whatsapp TEXT,
+  parent_email TEXT,
+  is_claimed BOOLEAN DEFAULT false,
+  claimed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Table Participants (Peserta & Tiket)
 CREATE TABLE IF NOT EXISTS public.participants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES public.students(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   division TEXT NOT NULL,
+  class_name TEXT,
+  ticket_type TEXT,
+  track TEXT,
   whatsapp TEXT,
   email TEXT,
   ticket_code TEXT NOT NULL,
@@ -30,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.participants (
   CONSTRAINT unique_ticket_per_event UNIQUE (event_id, ticket_code)
 );
 
--- 3. Table Scanner Users (User Tiket Scanner max 10)
+-- 4. Table Scanner Users (User Tiket Scanner max 10)
 CREATE TABLE IF NOT EXISTS public.scanner_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username TEXT UNIQUE NOT NULL,
@@ -39,16 +56,34 @@ CREATE TABLE IF NOT EXISTS public.scanner_users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Alter Table untuk database yang sudah terlanjur dibuat sebelumnya
+ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS student_id UUID REFERENCES public.students(id) ON DELETE SET NULL;
+ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS ticket_type TEXT;
+ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS track TEXT;
+ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS class_name TEXT;
+
 -- Turn on Row Level Security (RLS) and allow public read/write for simple access
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scanner_users ENABLE ROW LEVEL SECURITY;
 
--- Allow anonymous access for the app
+-- Allow anonymous access for the app (Idempotent policies)
+DROP POLICY IF EXISTS "Allow public access to events" ON public.events;
 CREATE POLICY "Allow public access to events" ON public.events FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public access to students" ON public.students;
+CREATE POLICY "Allow public access to students" ON public.students FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public access to participants" ON public.participants;
 CREATE POLICY "Allow public access to participants" ON public.participants FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public access to scanner_users" ON public.scanner_users;
 CREATE POLICY "Allow public access to scanner_users" ON public.scanner_users FOR ALL USING (true) WITH CHECK (true);
 
 -- Indexes for fast scanning and lookup
 CREATE INDEX IF NOT EXISTS idx_participants_ticket ON public.participants(ticket_code);
 CREATE INDEX IF NOT EXISTS idx_participants_event ON public.participants(event_id);
+CREATE INDEX IF NOT EXISTS idx_participants_student ON public.participants(student_id);
+CREATE INDEX IF NOT EXISTS idx_students_division_class ON public.students(division, class_name);
+CREATE INDEX IF NOT EXISTS idx_students_name ON public.students(student_name);

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Calendar, MapPin, Clock, CheckCircle2, Ticket, QrCode, AlertCircle, Share2 } from 'lucide-react';
 import { getEventInfo, getParticipants } from '@/lib/data-service';
 import { generateQRCodeDataUrl } from '@/lib/ticket-generator';
-import AppLogo from '@/components/Logo';
+import AppLogo, { DivisionLogo } from '@/components/Logo';
 
 export default function DigitalTicketPage() {
   const params = useParams();
@@ -69,19 +69,50 @@ export default function DigitalTicketPage() {
     );
   }
 
+  const isAkhwat = participant.track === 'Akhwat' || participant.ticket_type === 'Bunda' || participant.ticket_type === 'Akhwat';
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4 sm:p-6">
       <main className="max-w-md w-full mx-auto my-auto space-y-6">
         {/* Ticket Card Container */}
-        <div className="bg-gradient-to-b from-slate-900 to-slate-900/95 border border-sky-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-sky-500/10">
+        <div className={`bg-gradient-to-b from-slate-900 to-slate-900/95 border rounded-3xl overflow-hidden shadow-2xl ${
+          isAkhwat ? 'border-purple-500/30 shadow-purple-500/10' : 'border-sky-500/30 shadow-sky-500/10'
+        }`}>
           
           {/* Top Header */}
-          <div className="bg-gradient-to-r from-sky-600 to-blue-700 p-6 text-center text-white space-y-1">
-            <AppLogo className="w-12 h-12 object-contain mx-auto drop-shadow mb-1" />
+          <div className={`p-6 text-center text-white space-y-2 ${
+            isAkhwat 
+              ? 'bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-950 border-b border-purple-500/30' 
+              : 'bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 border-b border-blue-500/30'
+          }`}>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <AppLogo className="w-12 h-12 object-contain drop-shadow" />
+              {participant.division && (
+                <>
+                  <span className="text-white/40 font-bold text-lg">/</span>
+                  <div className="w-12 h-12 rounded-xl bg-white/10 p-1 flex items-center justify-center border border-white/10">
+                    <DivisionLogo
+                      division={participant.division}
+                      className="w-full h-full object-contain filter drop-shadow"
+                      alt={`Logo ${participant.division}`}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-semibold tracking-wider uppercase mb-1">
               <Ticket className="w-3.5 h-3.5" /> E-Tiket Resmi
             </div>
-            <h1 className="text-xl font-black leading-tight">{eventInfo?.name || 'Acara Tiket'}</h1>
+            <h1 className="text-xl font-black leading-tight">{eventInfo?.name || 'Kajian Akbar Yayasan Munazarah'}</h1>
+            
+            {/* Entrance Track Indicator */}
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+              isAkhwat 
+                ? 'bg-purple-500/20 text-purple-200 border-purple-500/40' 
+                : 'bg-blue-500/20 text-sky-200 border-blue-500/40'
+            }`}>
+              {isAkhwat ? '🟣 JALUR AKHWAT (PINTU MASUK UNGU)' : '🔵 JALUR IKHWAN (PINTU MASUK BIRU NAVY)'}
+            </div>
           </div>
 
           {/* QR Code Section */}
@@ -94,14 +125,31 @@ export default function DigitalTicketPage() {
               )}
             </div>
 
-            <div className="space-y-1">
-              <div className="font-mono text-2xl font-black text-sky-400 tracking-widest">
+            <div className="space-y-1.5">
+              <div className={`font-mono text-2xl font-black tracking-widest ${
+                isAkhwat ? 'text-purple-400' : 'text-sky-400'
+              }`}>
                 {participant.ticket_code}
               </div>
               <h2 className="text-xl font-bold text-white">{participant.name}</h2>
-              <p className="text-sm font-semibold text-slate-300">
-                Divisi: <strong className="text-sky-300">{participant.division || '-'}</strong>
-              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700 shadow-sm">
+                  <DivisionLogo division={participant.division} className="w-4 h-4 object-contain inline-block" />
+                  {participant.division || '-'}
+                </span>
+                {participant.class_name && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    Kelas: {participant.class_name}
+                  </span>
+                )}
+                {participant.ticket_type && (
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                    isAkhwat ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : 'bg-blue-500/20 text-sky-300 border-blue-500/40'
+                  }`}>
+                    {participant.ticket_type}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Attendance Status Badge */}
@@ -110,8 +158,12 @@ export default function DigitalTicketPage() {
                 <CheckCircle2 className="w-4 h-4" /> Telah Di-Scan (Hadir)
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/30 text-xs font-semibold">
-                <QrCode className="w-4 h-4 text-sky-400" /> Siap Di-Scan Saat Masuk
+              <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-xs font-semibold ${
+                isAkhwat 
+                  ? 'bg-purple-500/10 text-purple-300 border-purple-500/30' 
+                  : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+              }`}>
+                <QrCode className="w-4 h-4" /> Siap Di-Scan di Pintu Masuk
               </div>
             )}
           </div>
