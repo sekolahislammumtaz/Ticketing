@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Lock, UserPlus, Trash2, ShieldCheck, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { getScannerUsers, addScannerUser, deleteScannerUser } from '@/lib/data-service';
-import AppLogo from '@/components/Logo';
+import { getScannerUsers, addScannerUser, deleteScannerUser, SCHOOL_DIVISIONS } from '@/lib/data-service';
+import AppLogo, { DivisionLogo } from '@/components/Logo';
 
 export default function ScannerUsersPage() {
   const router = useRouter();
+  const [adminSession, setAdminSession] = useState(null);
   const [scanners, setScanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -17,20 +18,35 @@ export default function ScannerUsersPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [division, setDivision] = useState('');
 
   useEffect(() => {
     const isAuth = localStorage.getItem('ticketing_admin_auth') === 'true';
+    const savedSession = localStorage.getItem('ticketing_admin_session');
     if (!isAuth) {
       router.push('/admin');
       return;
     }
-    loadScanners();
+
+    let parsed = null;
+    if (savedSession) {
+      try {
+        parsed = JSON.parse(savedSession);
+        setAdminSession(parsed);
+      } catch (e) {
+        // fallback
+      }
+    }
+
+    const currentDiv = parsed?.isSuperAdmin ? null : (parsed?.division || null);
+    setDivision(parsed?.division || 'TK Islam Nazhirah');
+    loadScanners(currentDiv);
   }, [router]);
 
-  async function loadScanners() {
+  async function loadScanners(divFilter = null) {
     setLoading(true);
     try {
-      const data = await getScannerUsers();
+      const data = await getScannerUsers(divFilter);
       setScanners(data || []);
     } catch (err) {
       console.error('Failed to load scanner users:', err);
@@ -38,6 +54,10 @@ export default function ScannerUsersPage() {
       setLoading(false);
     }
   }
+
+  const isSuperAdmin = Boolean(adminSession?.isSuperAdmin);
+  const maxLimit = isSuperAdmin ? 10 : 5;
+  const currentDivisionName = adminSession?.division || 'Divisi';
 
   async function handleAddScanner(e) {
     e.preventDefault();
@@ -49,13 +69,15 @@ export default function ScannerUsersPage() {
       return;
     }
 
+    const targetDiv = isSuperAdmin ? (division || 'Sekolah Islam Mumtaz') : adminSession?.division;
+
     try {
-      await addScannerUser(username, password, name);
-      setSuccessMsg(`User scanner "${username}" dibuat.`);
+      await addScannerUser(username, password, name, targetDiv);
+      setSuccessMsg(`User scanner "${username}" (${targetDiv}) berhasil dibuat.`);
       setUsername('');
       setPassword('');
       setName('');
-      loadScanners();
+      loadScanners(isSuperAdmin ? null : adminSession?.division);
     } catch (err) {
       setErrorMsg(err.message);
     }
@@ -65,7 +87,7 @@ export default function ScannerUsersPage() {
     if (!confirm(`Hapus akun scanner "${uname}"? Akun ini tidak bisa dipakai masuk lagi.`)) return;
     try {
       await deleteScannerUser(id);
-      loadScanners();
+      loadScanners(isSuperAdmin ? null : adminSession?.division);
     } catch (err) {
       alert('Gagal menghapus: ' + err.message);
     }
@@ -84,18 +106,24 @@ export default function ScannerUsersPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <AppLogo className="w-8 h-8 object-contain drop-shadow" />
+              {adminSession?.isSuperAdmin ? (
+                <AppLogo className="w-8 h-8 object-contain drop-shadow" />
+              ) : (
+                <DivisionLogo division={adminSession?.division} className="w-8 h-8 object-contain drop-shadow" />
+              )}
               <div>
                 <h1 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
                   Kelola user scanner
                 </h1>
-                <p className="text-xs text-slate-400">KAJIAN YAYASAN MUNAZARAH TICKETING</p>
+                <p className="text-xs text-slate-400">
+                  {isSuperAdmin ? 'SUPER ADMIN YAYASAN MUNAZARAH' : `ADMIN ${currentDivisionName.toUpperCase()}`}
+                </p>
               </div>
             </div>
           </div>
 
           <div className="text-xs px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">
-            {scanners.length} dari 10 user
+            {scanners.length} dari {maxLimit} user
           </div>
         </div>
       </header>
@@ -109,7 +137,9 @@ export default function ScannerUsersPage() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Tambah user scanner</h2>
-              <p className="text-xs text-slate-400">Username dan password untuk masuk di halaman scanner</p>
+              <p className="text-xs text-slate-400">
+                Maksimal {maxLimit} user scanner untuk {isSuperAdmin ? 'keseluruhan acara' : `divisi ${currentDivisionName}`}
+              </p>
             </div>
           </div>
 
@@ -127,13 +157,13 @@ export default function ScannerUsersPage() {
             </div>
           )}
 
-          <form onSubmit={handleAddScanner} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <form onSubmit={handleAddScanner} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Username *</label>
               <input
                 type="text"
                 required
-                placeholder="scanner1"
+                placeholder="scanner_tk1"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
@@ -153,23 +183,43 @@ export default function ScannerUsersPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama petugas atau pintu (opsional)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama / Pintu *</label>
               <input
                 type="text"
-                placeholder="Petugas pintu utama"
+                required
+                placeholder="Pintu Gerbang TK"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
               />
             </div>
 
-            <div className="sm:col-span-3 flex justify-end">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Divisi</label>
+              {isSuperAdmin ? (
+                <select
+                  value={division}
+                  onChange={e => setDivision(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                >
+                  {SCHOOL_DIVISIONS.map(div => (
+                    <option key={div} value={div}>{div}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="w-full bg-slate-950/70 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-sky-400 font-semibold truncate">
+                  {currentDivisionName}
+                </div>
+              )}
+            </div>
+
+            <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
               <button
                 type="submit"
-                disabled={scanners.length >= 10}
+                disabled={scanners.length >= maxLimit}
                 className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-semibold text-xs transition-all shadow-lg shadow-sky-600/20 flex items-center gap-2"
               >
-                <UserPlus className="w-4 h-4" /> Simpan user scanner
+                <UserPlus className="w-4 h-4" /> Simpan user scanner ({scanners.length}/{maxLimit})
               </button>
             </div>
           </form>
@@ -188,14 +238,15 @@ export default function ScannerUsersPage() {
                   <th className="px-4 py-3">No</th>
                   <th className="px-4 py-3">Username</th>
                   <th className="px-4 py-3">Password</th>
-                  <th className="px-4 py-3">Nama atau pintu</th>
+                  <th className="px-4 py-3">Nama / Pintu</th>
+                  <th className="px-4 py-3">Divisi</th>
                   <th className="px-4 py-3 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-200">
                 {scanners.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
                       Belum ada user scanner. Buat akun pertama lewat formulir di atas.
                     </td>
                   </tr>
@@ -206,6 +257,11 @@ export default function ScannerUsersPage() {
                       <td className="px-4 py-3 font-semibold text-sky-300 font-mono">{s.username}</td>
                       <td className="px-4 py-3 font-mono text-slate-300">{s.password}</td>
                       <td className="px-4 py-3 text-slate-300">{s.name || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-950 border border-slate-800 text-purple-300">
+                          {s.division || 'Umum / Yayasan'}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <button
                           onClick={() => handleDeleteScanner(s.id, s.username)}

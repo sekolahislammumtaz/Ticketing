@@ -12,7 +12,7 @@ import {
   getEventInfo, saveEventInfo, getParticipants, addParticipant, 
   importParticipants, updateParticipant, markWhatsAppSent, deleteParticipant, clearAllParticipants, isSupabaseConfigured,
   getStudents, importStudents, resetStudentClaim,
-  SCHOOL_DIVISIONS, verifyAdminPassword, updateAdminPassword,
+  SCHOOL_DIVISIONS, verifyAdminPassword, updateAdminPassword, resetAdminPassword, resetAllAdminPasswords,
 } from '@/lib/data-service';
 import { generateTicketCode, generateQRCodeDataUrl } from '@/lib/ticket-generator';
 import { 
@@ -50,6 +50,7 @@ export default function AdminPage() {
   const [studentClassFilter, setStudentClassFilter] = useState('ALL');
   const [studentClaimFilter, setStudentClaimFilter] = useState('ALL');
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [isSavingStudent, setIsSavingStudent] = useState(false);
   const [newStudentForm, setNewStudentForm] = useState({
     student_name: '',
     division: 'Sekolah Islam Mumtaz',
@@ -238,9 +239,43 @@ export default function AdminPage() {
     }
   }
 
+  function handleResetDivisionPassword(targetDiv) {
+    if (!confirm(`Kembalikan password admin divisi "${targetDiv}" ke password default ('simumtaz123')?`)) {
+      return;
+    }
+    try {
+      resetAdminPassword(targetDiv);
+      setChangePassForm(prev => ({ 
+        ...prev, 
+        error: '', 
+        success: `Password untuk "${targetDiv}" berhasil di-reset ke default: 'simumtaz123'.` 
+      }));
+    } catch (err) {
+      setChangePassForm(prev => ({ ...prev, error: err.message, success: '' }));
+    }
+  }
+
+  function handleResetAllPasswords() {
+    if (!confirm("PERINGATAN: Kembalikan password admin SEMUA divisi ke password default ('simumtaz123')?")) {
+      return;
+    }
+    try {
+      resetAllAdminPasswords();
+      setChangePassForm(prev => ({ 
+        ...prev, 
+        error: '', 
+        success: "Password semua divisi berhasil di-reset ke 'simumtaz123'." 
+      }));
+    } catch (err) {
+      setChangePassForm(prev => ({ ...prev, error: err.message, success: '' }));
+    }
+  }
+
   // Handle Manual Add Student
   async function handleSaveNewStudent(e) {
     e.preventDefault();
+    if (isSavingStudent) return;
+
     if (!newStudentForm.student_name.trim() || !newStudentForm.class_name.trim()) {
       alert('Nama siswa dan kelas wajib diisi.');
       return;
@@ -250,32 +285,37 @@ export default function AdminPage() {
       ? (newStudentForm.division || 'Sekolah Islam Mumtaz')
       : adminSession?.division;
 
-    try {
-      await importStudents([
-        {
-          division: divisionToUse,
-          class_name: newStudentForm.class_name.trim(),
-          student_name: newStudentForm.student_name.trim(),
-          parent_whatsapp: newStudentForm.parent_whatsapp.trim(),
-          parent_email: newStudentForm.parent_email.trim(),
-          is_claimed: false,
-        },
-      ]);
+    const pendingData = {
+      division: divisionToUse,
+      class_name: newStudentForm.class_name.trim(),
+      student_name: newStudentForm.student_name.trim(),
+      parent_whatsapp: newStudentForm.parent_whatsapp.trim(),
+      parent_email: newStudentForm.parent_email.trim(),
+      is_claimed: false,
+    };
 
+    // Langsung tutup modal & aktifkan guard agar tidak terinput 2x
+    setShowAddStudentModal(false);
+    setIsSavingStudent(true);
+
+    setNewStudentForm({
+      student_name: '',
+      division: adminSession?.division || 'Sekolah Islam Mumtaz',
+      class_name: '',
+      parent_whatsapp: '',
+      parent_email: '',
+    });
+
+    try {
+      await importStudents([pendingData]);
       const updatedList = await getStudents();
       setStudents(updatedList);
-      setShowAddStudentModal(false);
-      setNewStudentForm({
-        student_name: '',
-        division: adminSession?.division || 'Sekolah Islam Mumtaz',
-        class_name: '',
-        parent_whatsapp: '',
-        parent_email: '',
-      });
-      alert('Siswa berhasil ditambahkan ke master data.');
+      alert(`Siswa "${pendingData.student_name}" (${pendingData.division}) berhasil ditambahkan ke master data.`);
     } catch (err) {
       console.error('Error adding student:', err);
       alert('Gagal menambahkan siswa: ' + err.message);
+    } finally {
+      setIsSavingStudent(false);
     }
   }
 
@@ -336,6 +376,10 @@ export default function AdminPage() {
   // Save Event Details Form
   async function handleSaveEvent(e) {
     e.preventDefault();
+    if (!adminSession?.isSuperAdmin) {
+      alert('Perubahan detail acara hanya dapat dilakukan oleh Super Admin Yayasan (Sekolah Islam Mumtaz).');
+      return;
+    }
     setIsSavingEvent(true);
     try {
       const saved = await saveEventInfo(eventInfo);
@@ -784,15 +828,15 @@ export default function AdminPage() {
               <span className="hidden sm:inline">Ganti Password</span>
             </button>
 
-            {adminSession?.isSuperAdmin && (
-              <Link
-                href="/admin/scanner-users"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/10 text-sky-300 border border-sky-500/20 text-xs font-semibold hover:bg-sky-500/20 transition-all"
-              >
-                <Lock className="w-3.5 h-3.5 text-sky-400" />
-                <span className="hidden sm:inline">User scanner (maks. 10)</span>
-              </Link>
-            )}
+            <Link
+              href="/admin/scanner-users"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/10 text-sky-300 border border-sky-500/20 text-xs font-semibold hover:bg-sky-500/20 transition-all"
+            >
+              <Lock className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">
+                User scanner ({adminSession?.isSuperAdmin ? 'maks. 10' : 'maks. 5'})
+              </span>
+            </Link>
 
             <button
               onClick={handleAdminLogout}
@@ -881,10 +925,11 @@ export default function AdminPage() {
                 <input
                   type="text"
                   required
+                  disabled={!adminSession?.isSuperAdmin}
                   placeholder="Contoh: Gathering Tahunan 2026"
                   value={eventInfo.name}
                   onChange={e => setEventInfo({ ...eventInfo, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-950 disabled:bg-slate-950/60 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
@@ -893,9 +938,10 @@ export default function AdminPage() {
                 <input
                   type="date"
                   required
+                  disabled={!adminSession?.isSuperAdmin}
                   value={eventInfo.date}
                   onChange={e => setEventInfo({ ...eventInfo, date: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-950 disabled:bg-slate-950/60 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
@@ -904,10 +950,11 @@ export default function AdminPage() {
                 <input
                   type="text"
                   required
+                  disabled={!adminSession?.isSuperAdmin}
                   placeholder="Contoh: 08:00 WIB"
                   value={eventInfo.time}
                   onChange={e => setEventInfo({ ...eventInfo, time: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-950 disabled:bg-slate-950/60 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
@@ -916,22 +963,31 @@ export default function AdminPage() {
                 <input
                   type="text"
                   required
+                  disabled={!adminSession?.isSuperAdmin}
                   placeholder="Contoh: Grand Ballroom Hall A"
                   value={eventInfo.location}
                   onChange={e => setEventInfo({ ...eventInfo, location: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-950 disabled:bg-slate-950/60 disabled:text-slate-400 disabled:cursor-not-allowed border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
                 />
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-4 flex justify-end mt-2">
-                <button
-                  type="submit"
-                  disabled={isSavingEvent}
-                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/20 flex items-center gap-2"
-                >
-                  {isSavingEvent ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Simpan detail acara
-                </button>
+              <div className="sm:col-span-2 lg:col-span-4 flex items-center justify-between mt-2">
+                {!adminSession?.isSuperAdmin && (
+                  <p className="text-xs text-amber-400/90 flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    Perubahan detail acara hanya dapat dilakukan oleh Super Admin Yayasan (Sekolah Islam Mumtaz).
+                  </p>
+                )}
+                {adminSession?.isSuperAdmin && (
+                  <button
+                    type="submit"
+                    disabled={isSavingEvent}
+                    className="ml-auto px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/20 flex items-center gap-2"
+                  >
+                    {isSavingEvent ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Simpan detail acara
+                  </button>
+                )}
               </div>
             </form>
           </section>
@@ -2004,6 +2060,41 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+
+            {/* Fitur Reset Password Admin Semua Divisi */}
+            <div className="pt-4 border-t border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  Reset Password Default (<code className="text-amber-300">simumtaz123</code>)
+                </span>
+                {adminSession?.isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={handleResetAllPasswords}
+                    className="text-[11px] text-red-400 hover:text-red-300 underline font-semibold"
+                  >
+                    Reset Semua Divisi
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                {(adminSession?.isSuperAdmin ? SCHOOL_DIVISIONS : [adminSession?.division]).map(div => (
+                  <button
+                    key={div}
+                    type="button"
+                    onClick={() => handleResetDivisionPassword(div)}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-left transition-colors text-xs"
+                  >
+                    <span className="truncate text-slate-300 pr-2">{div}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold whitespace-nowrap">
+                      Reset
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
