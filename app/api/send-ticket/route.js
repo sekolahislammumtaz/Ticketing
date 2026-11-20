@@ -15,17 +15,9 @@ export async function POST(request) {
       eventInfo,
     } = body;
 
-    const resendApiKey = process.env.RESEND_API_KEY || '';
-    let resend = null;
-
-    if (resendApiKey) {
-      try {
-        const { Resend } = await import('resend');
-        resend = new Resend(resendApiKey);
-      } catch (e) {
-        console.warn('Resend package not available:', e);
-      }
-    }
+    const brevoApiKey = process.env.BREVO_API_KEY || '';
+    const emailFromName = process.env.EMAIL_FROM_NAME || 'Yayasan Munazarah';
+    const emailFromAddress = process.env.EMAIL_FROM_ADDRESS || 'smpimumtaz@gmail.com';
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ success: false, message: 'Alamat email tidak valid.' }, { status: 400 });
@@ -232,33 +224,40 @@ export async function POST(request) {
 
     const emailSubject = `[E-tiket] ${eventName} (${processedTickets.length} tiket) - ${displayName}`;
 
-    // 5. Send actual email if RESEND_API_KEY is configured
-    if (resend) {
-      const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'Yayasan Munazarah <onboarding@resend.dev>',
-        to: [email],
-        subject: emailSubject,
-        html: htmlContent,
-      });
+    // 5. Send actual email via Brevo Transactional API
+    if (brevoApiKey) {
+      try {
+        const { BrevoClient } = await import('@getbrevo/brevo');
+        const brevo = new BrevoClient({ apiKey: brevoApiKey });
 
-      if (error) {
-        console.error('Resend API Error:', error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+        const sendResult = await brevo.transactionalEmails.sendTransacEmail({
+          subject: emailSubject,
+          htmlContent: htmlContent,
+          sender: {
+            name: emailFromName,
+            email: emailFromAddress,
+          },
+          to: [{ email: email, name: displayName }],
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Email tiket (${processedTickets.length} tiket) berhasil dikirim ke ${email} via Brevo`,
+          messageId: sendResult?.messageId || sendResult?.messageIds,
+        });
+      } catch (brevoError) {
+        console.error('Brevo API Error:', brevoError?.body || brevoError);
+        const errMsg = brevoError?.body?.message || brevoError.message || 'Gagal mengirim email via Brevo';
+        return NextResponse.json({ success: false, message: errMsg }, { status: 500 });
       }
-
-      return NextResponse.json({
-        success: true,
-        message: `Email tiket (${processedTickets.length} tiket) berhasil dikirim ke ${email}`,
-        data,
-      });
     } else {
-      // Simulation mode if RESEND_API_KEY is not configured
+      // Simulation mode if BREVO_API_KEY is not configured
       console.log(`[SIMULATION MODE] Email ticket sent to ${email} for student ${displayName} (${processedTickets.length} tickets)`);
       return NextResponse.json({
         success: true,
         simulated: true,
         ticketCount: processedTickets.length,
-        message: `[Simulasi] Email ${processedTickets.length} tiket disiapkan untuk ${email}. Masukkan RESEND_API_KEY di Vercel/.env.local untuk pengiriman fisik.`,
+        message: `[Simulasi] Email ${processedTickets.length} tiket disiapkan untuk ${email}. Masukkan BREVO_API_KEY di Vercel/.env.local untuk pengiriman fisik.`,
       });
     }
   } catch (err) {

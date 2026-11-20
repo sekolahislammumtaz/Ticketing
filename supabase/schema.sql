@@ -62,6 +62,12 @@ ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS ticket_type TEXT;
 ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS track TEXT;
 ALTER TABLE public.participants ADD COLUMN IF NOT EXISTS class_name TEXT;
 
+-- Grant izin tabel ke role anon/authenticated (tanpa ini PostgREST membalas 42501 / HTTP 401)
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+
 -- Turn on Row Level Security (RLS) and allow public read/write for simple access
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
