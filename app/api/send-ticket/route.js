@@ -99,12 +99,12 @@ export async function POST(request) {
               badgeBg: '#581c87',
               badgeBorder: '#a855f7',
               badgeText: '#f3e8ff',
-              badgeLabel: '🟣 JALUR AKHWAT',
+              badgeLabel: 'JALUR AKHWAT',
               titleColor: '#ffffff',
               subtitleColor: '#d8b4fe',
-              doorDesc: 'Pintu Masuk Khusus Akhwat (Ungu)',
+              doorDesc: 'Pintu masuk akhwat (ungu)',
               codeColor: '#c084fc',
-              infoNote: 'Tunjukkan barcode ini kepada petugas scanner di pintu masuk <strong>Akhwat (Ungu)</strong>',
+              infoNote: 'Tunjukkan kode QR ini ke petugas di pintu masuk <strong>Akhwat (Ungu)</strong>',
             }
           : {
               cardBg: '#0c1527',
@@ -112,12 +112,12 @@ export async function POST(request) {
               badgeBg: '#1e3a8a',
               badgeBorder: '#3b82f6',
               badgeText: '#dbeafe',
-              badgeLabel: '🔵 JALUR IKHWAN',
+              badgeLabel: 'JALUR IKHWAN',
               titleColor: '#ffffff',
               subtitleColor: '#93c5fd',
-              doorDesc: 'Pintu Masuk Khusus Ikhwan (Biru Navy)',
+              doorDesc: 'Pintu masuk ikhwan (biru navy)',
               codeColor: '#38bdf8',
-              infoNote: 'Tunjukkan barcode ini kepada petugas scanner di pintu masuk <strong>Ikhwan (Biru Navy)</strong>',
+              infoNote: 'Tunjukkan kode QR ini ke petugas di pintu masuk <strong>Ikhwan (Biru Navy)</strong>',
             };
 
         return `
@@ -161,7 +161,7 @@ export async function POST(request) {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>E-Tiket Resmi Kajian Yayasan Munazarah</title>
+          <title>E-tiket kajian Yayasan Munazarah</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070b14; color: #f8fafc; margin: 0; padding: 24px 12px;">
           <div style="max-width: 560px; margin: 0 auto; background: #0f172a; border-radius: 20px; border: 1px solid #1e293b; overflow: hidden; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
@@ -172,7 +172,7 @@ export async function POST(request) {
                 KAJIAN YAYASAN MUNAZARAH
               </h1>
               <p style="margin: 6px 0 0 0; font-size: 12px; color: #93c5fd; font-weight: 600;">
-                E-Tiket Masuk Resmi &bull; Barcode Masuk Acara
+                E-tiket masuk kajian
               </p>
             </div>
 
@@ -180,7 +180,7 @@ export async function POST(request) {
             <div style="padding: 24px 20px;">
               <p style="margin: 0 0 16px 0; font-size: 13.5px; color: #cbd5e1; line-height: 1.6;">
                 Assalamu'alaikum Warahmatullahi Wabarakatuh,<br />
-                Berikut adalah E-Tiket resmi masuk kajian untuk ananda <strong style="color: #ffffff;">${displayName}</strong> 
+                Berikut e-tiket masuk kajian untuk ananda <strong style="color: #ffffff;">${displayName}</strong> 
                 (${displayDivision}${displayClass ? ` &bull; ${displayClass}` : ''}):
               </p>
 
@@ -211,11 +211,11 @@ export async function POST(request) {
 
               <!-- Security & Guide Box -->
               <div style="background: #1e293b; border-radius: 12px; padding: 14px 16px; font-size: 12px; color: #94a3b8; line-height: 1.5; margin-top: 10px;">
-                <p style="margin: 0 0 6px 0; font-weight: 700; color: #f1f5f9;">Petunjuk Penting Masuk Acara:</p>
+                <p style="margin: 0 0 6px 0; font-weight: 700; color: #f1f5f9;">Petunjuk masuk acara:</p>
                 <ul style="margin: 0; padding-left: 18px; color: #cbd5e1;">
                   <li style="margin-bottom: 4px;">Pintu masuk dipisahkan antara <strong>Jalur Ikhwan (Biru Navy)</strong> dan <strong>Jalur Akhwat (Ungu)</strong>.</li>
-                  <li style="margin-bottom: 4px;">Tunjukkan barcode ini langsung dari layar ponsel Anda kepada petugas scanner.</li>
-                  <li>Setiap barcode hanya berlaku untuk <strong>1 kali pemindaian masuk</strong> (check-in).</li>
+                  <li style="margin-bottom: 4px;">Tunjukkan kode QR ini dari layar ponsel Anda ke petugas scanner.</li>
+                  <li>Setiap kode QR hanya berlaku untuk <strong>1 kali scan masuk</strong> (check-in).</li>
                 </ul>
               </div>
             </div>
@@ -223,14 +223,14 @@ export async function POST(request) {
             <!-- Footer -->
             <div style="background: #090d16; padding: 16px 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b;">
               <p style="margin: 0 0 4px 0;">&copy; 2026 Yayasan Munazarah Ticketing System</p>
-              <p style="margin: 0;">Pesan ini dikirimkan otomatis ke alamat email wali murid terkonfirmasi.</p>
+              <p style="margin: 0;">Email ini dikirim otomatis ke alamat email wali murid yang terdaftar.</p>
             </div>
           </div>
         </body>
       </html>
     `;
 
-    const emailSubject = `[E-TIKET RESMI] ${eventName} (${processedTickets.length} Tiket) - ${displayName}`;
+    const emailSubject = `[E-tiket] ${eventName} (${processedTickets.length} tiket) - ${displayName}`;
 
     // 5. Send actual email if RESEND_API_KEY is configured
     if (resend) {

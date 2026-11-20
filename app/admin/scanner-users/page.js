@@ -45,13 +45,13 @@ export default function ScannerUsersPage() {
     setSuccessMsg('');
 
     if (!username || !password) {
-      setErrorMsg('Username dan Password wajib diisi!');
+      setErrorMsg('Username dan password wajib diisi.');
       return;
     }
 
     try {
       await addScannerUser(username, password, name);
-      setSuccessMsg(`Berhasil membuat user tiket scanner: "${username}"`);
+      setSuccessMsg(`User scanner "${username}" dibuat.`);
       setUsername('');
       setPassword('');
       setName('');
@@ -62,7 +62,7 @@ export default function ScannerUsersPage() {
   }
 
   async function handleDeleteScanner(id, uname) {
-    if (!confirm(`Hapus akun scanner "${uname}"?`)) return;
+    if (!confirm(`Hapus akun scanner "${uname}"? Akun ini tidak bisa dipakai masuk lagi.`)) return;
     try {
       await deleteScannerUser(id);
       loadScanners();
@@ -87,7 +87,7 @@ export default function ScannerUsersPage() {
               <AppLogo className="w-8 h-8 object-contain drop-shadow" />
               <div>
                 <h1 className="font-bold text-base sm:text-lg text-white flex items-center gap-2">
-                  Kelola User Tiket Scanner
+                  Kelola user scanner
                 </h1>
                 <p className="text-xs text-slate-400">KAJIAN YAYASAN MUNAZARAH TICKETING</p>
               </div>
@@ -95,7 +95,7 @@ export default function ScannerUsersPage() {
           </div>
 
           <div className="text-xs px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">
-            {scanners.length} / 10 User Aktif
+            {scanners.length} dari 10 user
           </div>
         </div>
       </header>
@@ -108,8 +108,8 @@ export default function ScannerUsersPage() {
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Tambah User Scanner Baru</h2>
-              <p className="text-xs text-slate-400">Username & password untuk login di halaman scanner mobile</p>
+              <h2 className="text-lg font-bold text-white">Tambah user scanner</h2>
+              <p className="text-xs text-slate-400">Username dan password untuk masuk di halaman scanner</p>
             </div>
           </div>
 
@@ -153,10 +153,10 @@ export default function ScannerUsersPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama Petugas / Pintu (Opsional)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama petugas atau pintu (opsional)</label>
               <input
                 type="text"
-                placeholder="Petugas Gate Utama"
+                placeholder="Petugas pintu utama"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
@@ -169,7 +169,7 @@ export default function ScannerUsersPage() {
                 disabled={scanners.length >= 10}
                 className="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-semibold text-xs transition-all shadow-lg shadow-sky-600/20 flex items-center gap-2"
               >
-                <UserPlus className="w-4 h-4" /> Simpan User Scanner
+                <UserPlus className="w-4 h-4" /> Simpan user scanner
               </button>
             </div>
           </form>
@@ -178,7 +178,7 @@ export default function ScannerUsersPage() {
         {/* List of Active Scanner Users */}
         <section className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-xl">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <KeyRound className="w-5 h-5 text-sky-400" /> Daftar User Scanner Aktif ({scanners.length})
+            <KeyRound className="w-5 h-5 text-sky-400" /> Daftar user scanner ({scanners.length})
           </h2>
 
           <div className="overflow-x-auto rounded-xl border border-slate-800">
@@ -188,7 +188,7 @@ export default function ScannerUsersPage() {
                   <th className="px-4 py-3">No</th>
                   <th className="px-4 py-3">Username</th>
                   <th className="px-4 py-3">Password</th>
-                  <th className="px-4 py-3">Nama / Pintu Gate</th>
+                  <th className="px-4 py-3">Nama atau pintu</th>
                   <th className="px-4 py-3 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -196,7 +196,7 @@ export default function ScannerUsersPage() {
                 {scanners.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                      Belum ada user scanner yang dibuat.
+                      Belum ada user scanner. Buat akun pertama lewat formulir di atas.
                     </td>
                   </tr>
                 ) : (
@@ -210,7 +210,7 @@ export default function ScannerUsersPage() {
                         <button
                           onClick={() => handleDeleteScanner(s.id, s.username)}
                           className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                          title="Hapus User Scanner"
+                          title="Hapus user scanner"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

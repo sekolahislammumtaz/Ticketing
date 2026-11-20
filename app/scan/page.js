@@ -180,7 +180,7 @@ export default function TicketScannerPage() {
     try {
       const result = await scanTicket(
         cleanCode, 
-        activeScannerUser?.name || activeScannerUser?.username || 'Petugas Scanner'
+        activeScannerUser?.name || activeScannerUser?.username || 'petugas lain'
       );
 
       if (result.success) {
@@ -189,7 +189,7 @@ export default function TicketScannerPage() {
 
         const scanObj = {
           status: 'SUCCESS',
-          message: 'Tiket berhasil di Scan', // Requirement 10
+          message: 'Tiket berhasil di-scan',
           participant: result.participant,
           time: new Date().toLocaleTimeString('id-ID'),
         };
@@ -199,10 +199,10 @@ export default function TicketScannerPage() {
       } else if (result.reason === 'ALREADY_USED') {
         playAudioBeep('ERROR');
 
-        const scannerName = result.participant?.scanned_by || 'Petugas Scanner';
+        const scannerName = result.participant?.scanned_by || 'petugas lain';
         const scanObj = {
           status: 'USED',
-          message: result.message || `Tiket Sudah Pernah di Scan oleh ${scannerName}`,
+          message: result.message || `Tiket sudah di-scan oleh ${scannerName}`,
           participant: result.participant,
           time: new Date().toLocaleTimeString('id-ID'),
         };
@@ -214,7 +214,7 @@ export default function TicketScannerPage() {
 
         const scanObj = {
           status: 'NOT_FOUND',
-          message: 'Tiket Tidak Ditemukan!',
+          message: 'Tiket tidak ditemukan.',
           code: cleanCode,
           time: new Date().toLocaleTimeString('id-ID'),
         };
@@ -273,7 +273,7 @@ export default function TicketScannerPage() {
           <button
             onClick={handleLogout}
             className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Logout Petugas"
+            title="Keluar"
           >
             <LogOut className="w-4 h-4" /> Keluar
           </button>
@@ -299,12 +299,12 @@ export default function TicketScannerPage() {
           {!isScanning && (
             <div className="absolute inset-0 z-20 bg-slate-950/80 flex flex-col items-center justify-center p-6 text-center">
               <Camera className="w-12 h-12 text-slate-500 animate-pulse mb-3" />
-              <p className="text-xs text-slate-400 mb-4">Mengaktifkan kamera smartphone...</p>
+              <p className="text-xs text-slate-400 mb-4">Menyalakan kamera…</p>
               <button
                 onClick={startScanner}
                 className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" /> Buka Kamera Lagi
+                <RefreshCw className="w-4 h-4" /> Nyalakan kamera
               </button>
             </div>
           )}
@@ -341,7 +341,7 @@ export default function TicketScannerPage() {
                     ? 'bg-purple-950/90 text-purple-200 border-purple-500/50' 
                     : 'bg-blue-950/90 text-sky-200 border-blue-500/50'
                 }`}>
-                  {isAkhwat ? '🟣 JALUR AKHWAT (PINTU UNGU)' : '🔵 JALUR IKHWAN (PINTU BIRU NAVY)'}
+                  {isAkhwat ? 'Jalur akhwat (pintu ungu)' : 'Jalur ikhwan (pintu biru navy)'}
                 </div>
               )}
 
@@ -378,10 +378,10 @@ export default function TicketScannerPage() {
                       : 'text-red-400'
                 }`}>
                   {isSuccess 
-                    ? 'Tiket Berhasil di-Scan!' 
+                    ? 'Tiket berhasil di-scan' 
                     : isUsed 
-                      ? 'PERINGATAN: Tiket Sudah Digunakan!' 
-                      : 'Tiket Tidak Ditemukan!'}
+                      ? 'Tiket sudah dipakai' 
+                      : 'Tiket tidak ditemukan'}
                 </h2>
                 <p className={`text-xs font-semibold ${
                   isSuccess 
@@ -390,7 +390,7 @@ export default function TicketScannerPage() {
                 }`}>
                   {scanResult.message}
                 </p>
-                <p className="text-[10px] text-slate-500 font-mono">Waktu Scan: {scanResult.time}</p>
+                <p className="text-[10px] text-slate-500 font-mono">Waktu scan: {scanResult.time}</p>
               </div>
 
               {/* Participant Details Card */}
@@ -399,7 +399,7 @@ export default function TicketScannerPage() {
                   isAkhwat ? 'bg-purple-950/40 border-purple-500/30' : 'bg-slate-950/80 border-slate-800'
                 }`}>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-slate-400">Nama Siswa / Peserta</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Nama peserta</span>
                     <div className="text-lg font-black text-white">{p.name}</div>
                   </div>
 
@@ -423,7 +423,7 @@ export default function TicketScannerPage() {
                   </div>
 
                   <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-800/80">
-                    <span className="text-slate-400">Kode Tiket:</span>
+                    <span className="text-slate-400">Kode tiket:</span>
                     <span className={`font-mono font-bold ${isAkhwat ? 'text-purple-300' : 'text-sky-300'}`}>
                       {p.ticket_code}
                     </span>
@@ -432,7 +432,7 @@ export default function TicketScannerPage() {
                   {isUsed && p.scanned_at && (
                     <div className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 space-y-0.5">
                       <div className="font-bold flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Telah Di-Scan Sebelumnya
+                        <AlertTriangle className="w-3.5 h-3.5" /> Sudah di-scan sebelumnya
                       </div>
                       <div>Waktu: {new Date(p.scanned_at).toLocaleString('id-ID')}</div>
                       {p.scanned_by && <div>Petugas: {p.scanned_by}</div>}
@@ -458,7 +458,7 @@ export default function TicketScannerPage() {
                       : 'bg-red-600 hover:bg-red-500 shadow-red-600/20'
                 }`}
               >
-                <Check className="w-5 h-5" /> OK / Lanjutkan Scan
+                <Check className="w-5 h-5" /> Lanjut scan
               </button>
             </div>
           </div>
@@ -489,7 +489,7 @@ export default function TicketScannerPage() {
         {/* Recent Scan History */}
         {scanHistory.length > 0 && (
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Riwayat Scan Terakhir</h4>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Riwayat scan terakhir</h4>
             <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
               {scanHistory.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
@@ -498,7 +498,7 @@ export default function TicketScannerPage() {
                       item.status === 'SUCCESS' ? 'bg-emerald-400' : item.status === 'USED' ? 'bg-amber-400' : 'bg-red-400'
                     }`} />
                     <span className="font-semibold text-white truncate">
-                      {item.participant?.name || item.code || 'Unknown'}
+                      {item.participant?.name || item.code || 'Tanpa nama'}
                     </span>
                   </div>
                   <span className="text-[10px] text-slate-400 flex-shrink-0 ml-2">{item.time}</span>

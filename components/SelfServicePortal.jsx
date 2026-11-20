@@ -89,7 +89,7 @@ const TICKET_CONFIGS = [
     label: 'Ayah',
     track: 'Ikhwan',
     trackLabel: 'Jalur Ikhwan',
-    description: 'Tiket khusus untuk Ayah / Wali Laki-laki',
+    description: 'Tiket untuk ayah atau wali laki-laki',
     badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     accentBorder: 'hover:border-sky-500/50',
     checkedBorder: 'border-sky-500 bg-sky-950/30 ring-1 ring-sky-500/40',
@@ -100,7 +100,7 @@ const TICKET_CONFIGS = [
     label: 'Bunda',
     track: 'Akhwat',
     trackLabel: 'Jalur Akhwat',
-    description: 'Tiket khusus untuk Bunda / Wali Perempuan',
+    description: 'Tiket untuk bunda atau wali perempuan',
     badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     accentBorder: 'hover:border-purple-500/50',
     checkedBorder: 'border-purple-500 bg-purple-950/30 ring-1 ring-purple-500/40',
@@ -111,7 +111,7 @@ const TICKET_CONFIGS = [
     label: 'Ikhwan',
     track: 'Ikhwan',
     trackLabel: 'Jalur Ikhwan',
-    description: 'Tiket pendamping / tamu keluarga Ikhwan (Pria)',
+    description: 'Tiket pendamping atau tamu keluarga ikhwan (pria)',
     badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
     accentBorder: 'hover:border-sky-500/50',
     checkedBorder: 'border-sky-500 bg-sky-950/30 ring-1 ring-sky-500/40',
@@ -122,7 +122,7 @@ const TICKET_CONFIGS = [
     label: 'Akhwat',
     track: 'Akhwat',
     trackLabel: 'Jalur Akhwat',
-    description: 'Tiket pendamping / tamu keluarga Akhwat (Wanita)',
+    description: 'Tiket pendamping atau tamu keluarga akhwat (wanita)',
     badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     accentBorder: 'hover:border-purple-500/50',
     checkedBorder: 'border-purple-500 bg-purple-950/30 ring-1 ring-purple-500/40',
@@ -276,7 +276,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
     } else {
       // Check
       if (selectedTickets.length >= 2) {
-        setTicketNotice('Maksimal 2 tiket telah dipilih untuk ananda ini.');
+        setTicketNotice('Ananda ini sudah punya 2 tiket. Batasnya maksimal 2.');
         return;
       }
       setSelectedTickets(prev => [...prev, ticketId]);
@@ -286,11 +286,11 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
   // Open Confirmation Modal
   const handleProceedToConfirmation = () => {
     if (!selectedStudent) {
-      alert('Silakan pilih data siswa terlebih dahulu.');
+      alert('Pilih nama ananda dulu.');
       return;
     }
     if (selectedTickets.length === 0) {
-      alert('Silakan pilih minimal 1 jenis tiket.');
+      alert('Pilih minimal 1 tiket.');
       return;
     }
     setSubmitError('');
@@ -301,12 +301,12 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
   const handleConfirmClaim = async (e) => {
     e?.preventDefault();
     if (selectedTickets.length === 0) {
-      setSubmitError('Pilih minimal 1 jenis tiket.');
+      setSubmitError('Pilih minimal 1 tiket.');
       return;
     }
 
     if (!parentEmail || !parentEmail.trim() || !parentEmail.includes('@')) {
-      setSubmitError('Alamat email wajib diisi dengan benar untuk pengiriman QR-Code E-Tiket.');
+      setSubmitError('Email wajib diisi. Kode QR tiket dikirim ke email ini.');
       return;
     }
 
@@ -364,7 +364,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
       }
     } catch (err) {
       console.error('Error claiming tickets:', err);
-      setSubmitError(err.message || 'Gagal memproses pemesanan tiket. Silakan coba lagi.');
+      setSubmitError(err.message || 'Tiket gagal diproses. Coba lagi; kalau tetap gagal, hubungi admin divisi Anda.');
     } finally {
       setIsSubmitting(false);
     }
@@ -389,13 +389,13 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold tracking-wide uppercase">
-              <Ticket className="w-3.5 h-3.5" /> Portal Pemesanan Mandiri Wali Murid
+              <Ticket className="w-3.5 h-3.5" /> Portal pemesanan mandiri wali murid
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Pemesanan Tiket Masuk Kajian
+              Pemesanan tiket masuk kajian
             </h2>
             <p className="text-slate-400 text-sm max-w-2xl leading-relaxed">
-              Silakan pilih divisi sekolah, kelas, dan nama ananda untuk mengklaim tiket masuk kajian. Setiap siswa berhak mendapatkan maksimal <strong className="text-sky-300">2 tiket</strong>.
+              Pilih divisi sekolah, kelas, lalu nama ananda untuk klaim tiket masuk kajian. Setiap ananda bisa klaim maksimal <strong className="text-sky-300">2 tiket</strong>.
             </p>
           </div>
 
@@ -403,9 +403,9 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             <button
               onClick={handleResetOrder}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition self-start md:self-center"
-              title="Mulai Ulang Pemilihan"
+              title="Mulai ulang pemilihan"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Reset Formulir
+              <RefreshCw className="w-3.5 h-3.5" /> Mulai ulang
             </button>
           )}
         </div>
@@ -422,7 +422,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Langkah 1</p>
-              <p className="text-xs font-bold truncate">{selectedDivision ? selectedDivision.replace(' Islam Nazhirah', '').replace(' Sekolah Islam', '') : 'Divisi Sekolah'}</p>
+              <p className="text-xs font-bold truncate">{selectedDivision ? selectedDivision.replace(' Islam Nazhirah', '').replace(' Sekolah Islam', '') : 'Divisi sekolah'}</p>
             </div>
           </div>
 
@@ -436,7 +436,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Langkah 2</p>
-              <p className="text-xs font-bold truncate">{selectedClass || 'Pilih Kelas'}</p>
+              <p className="text-xs font-bold truncate">{selectedClass || 'Pilih kelas'}</p>
             </div>
           </div>
 
@@ -450,7 +450,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Langkah 3</p>
-              <p className="text-xs font-bold truncate">{selectedStudent ? selectedStudent.student_name : 'Pilih Siswa'}</p>
+              <p className="text-xs font-bold truncate">{selectedStudent ? selectedStudent.student_name : 'Pilih ananda'}</p>
             </div>
           </div>
 
@@ -464,7 +464,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Langkah 4</p>
-              <p className="text-xs font-bold truncate">{selectedTickets.length > 0 ? `${selectedTickets.length} Tiket` : 'Jenis Tiket'}</p>
+              <p className="text-xs font-bold truncate">{selectedTickets.length > 0 ? `${selectedTickets.length} tiket` : 'Jenis tiket'}</p>
             </div>
           </div>
         </div>
@@ -479,7 +479,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             <span className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center text-xs font-bold">
               1
             </span>
-            <h3 className="text-lg font-bold text-white">Pilih Divisi Sekolah</h3>
+            <h3 className="text-lg font-bold text-white">Pilih divisi sekolah</h3>
           </div>
           {selectedDivision && (
             <span className="text-xs text-sky-400 font-medium flex items-center gap-1">
@@ -554,7 +554,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                       isSelected ? 'text-sky-400 font-bold' : 'text-slate-500 group-hover:text-slate-400'
                     }`}
                   >
-                    {isSelected ? 'Divisi Aktif' : 'Pilih Divisi'}
+                    {isSelected ? 'Divisi aktif' : 'Pilih divisi'}
                   </span>
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
@@ -583,7 +583,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                 2
               </span>
               <div>
-                <h3 className="text-lg font-bold text-white">Pilih Kelas</h3>
+                <h3 className="text-lg font-bold text-white">Pilih kelas</h3>
                 <p className="text-xs text-slate-400">Daftar kelas aktif untuk {selectedDivision}</p>
               </div>
             </div>
@@ -597,13 +597,13 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
           {loadingClasses ? (
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 flex items-center justify-center gap-3">
               <RefreshCw className="w-5 h-5 animate-spin text-sky-400" />
-              <span>Memuat daftar kelas {selectedDivision}...</span>
+              <span>Memuat daftar kelas {selectedDivision}…</span>
             </div>
           ) : classes.length === 0 ? (
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
               <AlertCircle className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-300">Belum ada kelas yang terdaftar untuk divisi ini.</p>
-              <p className="text-xs text-slate-500 mt-1">Silakan hubungi administrator atau pilih divisi lain.</p>
+              <p className="text-sm font-semibold text-slate-300">Divisi ini belum punya kelas.</p>
+              <p className="text-xs text-slate-500 mt-1">Hubungi admin divisi atau pilih divisi lain.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
@@ -646,9 +646,9 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                 3
               </span>
               <div>
-                <h3 className="text-lg font-bold text-white">Pilih Nama Siswa / Ananda</h3>
+                <h3 className="text-lg font-bold text-white">Pilih nama ananda</h3>
                 <p className="text-xs text-slate-400">
-                  {students.length} siswa terdaftar di {selectedClass}
+                  {students.length} ananda terdaftar di {selectedClass}
                 </p>
               </div>
             </div>
@@ -658,7 +658,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Cari nama ananda..."
+                placeholder="Cari nama ananda…"
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-8 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition"
@@ -677,15 +677,15 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
           {loadingStudents ? (
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400 flex items-center justify-center gap-3">
               <RefreshCw className="w-5 h-5 animate-spin text-sky-400" />
-              <span>Memuat data siswa kelas {selectedClass}...</span>
+              <span>Memuat data ananda kelas {selectedClass}…</span>
             </div>
           ) : filteredStudents.length === 0 ? (
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
               <Search className="w-8 h-8 text-slate-600 mx-auto mb-2" />
               <p className="text-sm font-semibold text-slate-300">
-                {studentSearch ? `Tidak ada nama yang cocok dengan "${studentSearch}"` : 'Belum ada data siswa.'}
+                {studentSearch ? `Tidak ada ananda yang cocok dengan "${studentSearch}"` : 'Belum ada data ananda di kelas ini.'}
               </p>
-              <p className="text-xs text-slate-500 mt-1">Pastikan ejaan nama sudah benar atau hapus kata kunci pencarian.</p>
+              <p className="text-xs text-slate-500 mt-1">Cek ejaan nama, atau hapus kata kunci pencarian.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
@@ -735,7 +735,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                           </h4>
                           {isClaimed ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400">
-                              <Lock className="w-3 h-3" /> Sudah Diklaim
+                              <Lock className="w-3 h-3" /> Sudah klaim
                             </span>
                           ) : (
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
@@ -751,11 +751,11 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                         {isClaimed ? (
                           <p className="text-[11px] text-rose-400/90 mt-2 flex items-center gap-1 bg-rose-500/5 px-2 py-1 rounded-md border border-rose-500/10">
                             <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                            Tiket untuk ananda ini telah dipesan sebelumnya.
+                            Tiket ananda ini sudah dipesan.
                           </p>
                         ) : (
                           <p className="text-[11px] text-sky-400/80 mt-1">
-                            Klik untuk memilih ananda ini &rarr;
+                            Pilih ananda ini &rarr;
                           </p>
                         )}
                       </div>
@@ -793,7 +793,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                 4
               </span>
               <div>
-                <h3 className="text-lg font-bold text-white">Pilih Jenis Tiket (Maksimal 2 Tiket)</h3>
+                <h3 className="text-lg font-bold text-white">Pilih jenis tiket (maksimal 2)</h3>
                 <p className="text-xs text-slate-400">
                   Untuk ananda: <strong className="text-sky-300">{selectedStudent.student_name}</strong> ({selectedStudent.class_name})
                 </p>
@@ -812,7 +812,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                 }`}
               >
                 <Ticket className="w-4 h-4" />
-                <span>Tiket Terpilih: <strong>{selectedTickets.length} / 2</strong></span>
+                <span>Tiket terpilih: <strong>{selectedTickets.length}/2</strong></span>
               </div>
             </div>
           </div>
@@ -828,7 +828,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
           {selectedTickets.length === 2 && !ticketNotice && (
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-xs text-emerald-300 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
-              <span>Batas maksimal 2 tiket per siswa telah tercapai. Opsi lain otomatis dikunci.</span>
+              <span>Batas 2 tiket sudah tercapai. Pilihan lain dikunci.</span>
             </div>
           )}
 
@@ -880,7 +880,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
 
                   <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
                     <span className="text-slate-500">
-                      {isDisabled ? 'Batas 2 tiket tercapai' : isChecked ? 'Tiket ini tercentang' : 'Klik untuk memilih'}
+                      {isDisabled ? 'Batas 2 tiket tercapai' : isChecked ? 'Sudah dipilih' : 'Klik untuk memilih'}
                     </span>
                     <span
                       className={`font-semibold ${
@@ -900,11 +900,11 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
             <div>
               <p className="text-sm font-bold text-white">
                 {selectedTickets.length === 0
-                  ? 'Pilih minimal 1 jenis tiket untuk melanjutkan'
-                  : `${selectedTickets.length} jenis tiket telah dipilih (${selectedTickets.join(' + ')})`}
+                  ? 'Pilih minimal 1 tiket untuk lanjut'
+                  : `${selectedTickets.length} tiket dipilih (${selectedTickets.join(' + ')})`}
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                Langkah berikutnya: Verifikasi nomor WhatsApp & email untuk penerimaan e-tiket.
+                Berikutnya: pastikan nomor WhatsApp dan email penerima tiket.
               </p>
             </div>
 
@@ -917,7 +917,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                   : 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02]'
               }`}
             >
-              <span>Lanjutkan Konfirmasi Data & Kontak</span>
+              <span>Lanjut konfirmasi data</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -936,8 +936,8 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Konfirmasi Pemesanan Tiket</h3>
-                  <p className="text-xs text-slate-400">Pastikan data ananda & kontak wali murid sesuai</p>
+                  <h3 className="text-lg font-bold text-white">Konfirmasi pemesanan tiket</h3>
+                  <p className="text-xs text-slate-400">Pastikan data ananda dan kontak wali murid sudah benar</p>
                 </div>
               </div>
               <button
@@ -952,12 +952,12 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
               const adminContact = DIVISION_ADMIN_CONTACTS[selectedDivision];
               const adminWaCorrectionUrl = adminContact
                 ? `https://wa.me/${adminContact.phoneClean}?text=${encodeURIComponent(
-                    `Assalamu'alaikum Admin ${selectedDivision}, saya wali murid dari ananda ${selectedStudent?.student_name} (${selectedClass}). Saya ingin mengoreksi data nomor WhatsApp / Email untuk penerimaan E-Tiket Kajian Yayasan Munazarah.`
+                    `Assalamu'alaikum Admin ${selectedDivision}, saya wali murid dari ananda ${selectedStudent?.student_name} (${selectedClass}). Saya ingin mengoreksi data nomor WhatsApp / Email untuk penerimaan e-tiket kajian Yayasan Munazarah.`
                   )}`
                 : '#';
               const adminWaHelpUrl = adminContact
                 ? `https://wa.me/${adminContact.phoneClean}?text=${encodeURIComponent(
-                    `Assalamu'alaikum Admin ${selectedDivision}, saya wali murid dari ananda ${selectedStudent?.student_name} (${selectedClass}). Saya sudah melakukan pemesanan tiket tapi email belum masuk. Mohon bantuannya.`
+                    `Assalamu'alaikum Admin ${selectedDivision}, saya wali murid dari ananda ${selectedStudent?.student_name} (${selectedClass}). Saya sudah pesan tiket tapi emailnya belum masuk. Mohon bantuannya.`
                   )}`
                 : '#';
 
@@ -970,9 +970,9 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                     </div>
 
                     <div className="space-y-1.5">
-                      <h4 className="text-xl font-extrabold text-white">Pemesanan Tiket Berhasil!</h4>
+                      <h4 className="text-xl font-extrabold text-white">Pemesanan tiket berhasil</h4>
                       <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                        Alhamdulillah, tiket masuk kajian untuk ananda <strong className="text-white">{selectedStudent?.student_name}</strong> telah berhasil diterbitkan.
+                        Alhamdulillah, tiket masuk kajian untuk ananda <strong className="text-white">{selectedStudent?.student_name}</strong> sudah terbit.
                       </p>
                     </div>
 
@@ -980,12 +980,12 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                     <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-200 flex items-start gap-3 text-left">
                       <Mail className="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <p className="font-semibold text-white">Barcode QR-Code E-Tiket Dikirim ke Email:</p>
+                        <p className="font-semibold text-white">Kode QR tiket dikirim ke email</p>
                         <p className="text-sky-300 font-mono text-xs font-bold">
                           {maskEmail(parentEmail || selectedStudent?.parent_email)}
                         </p>
                         <p className="text-[11px] text-slate-400 leading-relaxed">
-                          Silakan periksa Kotak Masuk (Inbox) atau folder Spam/Junk pada email Anda untuk melihat tiket ber-barcode.
+                          Cek kotak masuk atau folder spam. Tiket berisi kode QR untuk ditunjukkan di pintu masuk.
                         </p>
                       </div>
                     </div>
@@ -994,16 +994,16 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                     <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-start gap-3 text-left">
                       <Lock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <p className="font-bold text-amber-300">Pengamanan Kode QR Mandiri</p>
+                        <p className="font-bold text-amber-300">Kode QR tidak tampil di sini</p>
                         <p className="text-[11px] text-slate-300 leading-relaxed">
-                          Demi keamanan data dan mencegah penyalahgunaan oleh pihak lain, barcode QR-Code E-Tiket <strong>TIDAK DITAMPILKAN di layar publik ini</strong>. Barcode hanya dapat diakses melalui email resmi wali murid.
+                          Demi keamanan, kode QR tidak ditampilkan di layar ini. Kode hanya dikirim ke email wali murid.
                         </p>
                       </div>
                     </div>
 
                     {/* Issued Tickets Reference List (Without public QR links) */}
                     <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left space-y-2.5">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ringkasan Tiket Terbit:</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ringkasan tiket terbit</p>
                       <div className="space-y-2">
                         {claimResult.tickets?.map((t, idx) => (
                           <div
@@ -1020,7 +1020,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                               </p>
                             </div>
                             <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-semibold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Terkirim ke Email
+                              <CheckCircle2 className="w-3 h-3" /> Terkirim ke email
                             </span>
                           </div>
                         ))}
@@ -1037,7 +1037,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                           className="text-xs text-slate-400 hover:text-emerald-400 inline-flex items-center gap-1.5 transition"
                         >
                           <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Belum menerima email? Hubungi Admin {selectedDivision} di WhatsApp</span>
+                          <span>Email belum masuk? Hubungi admin {selectedDivision} di WhatsApp</span>
                         </a>
                       </div>
                     )}
@@ -1046,7 +1046,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                       onClick={handleResetOrder}
                       className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition"
                     >
-                      Selesai & Pesan Siswa Lain
+                      Selesai, pesan ananda lain
                     </button>
                   </div>
                 );
@@ -1058,18 +1058,18 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                   {/* Order Summary Box */}
                   <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-800/80">
-                      <span className="text-slate-400">Divisi & Kelas:</span>
+                      <span className="text-slate-400">Divisi dan kelas</span>
                       <span className="text-slate-200 font-semibold flex items-center gap-1.5">
                         <DivisionLogo division={selectedDivision} className="w-4 h-4 object-contain inline-block" />
                         {selectedDivision} &bull; {selectedClass}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-800/80">
-                      <span className="text-slate-400">Nama Siswa:</span>
+                      <span className="text-slate-400">Nama ananda</span>
                       <span className="text-white font-bold">{selectedStudent?.student_name}</span>
                     </div>
                     <div className="text-xs space-y-1.5">
-                      <span className="text-slate-400">Tiket Terpilih ({selectedTickets.length}):</span>
+                      <span className="text-slate-400">Tiket terpilih ({selectedTickets.length})</span>
                       <div className="flex flex-wrap gap-2 pt-1">
                         {selectedTickets.map((tId) => {
                           const tConf = TICKET_CONFIGS.find(c => c.id === tId);
@@ -1089,8 +1089,8 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                   {/* Registered Contact Preview Box (Masked) */}
                   <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-300">Data Kontak Terdaftar di Sekolah:</span>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Tersensor</span>
+                      <span className="text-xs font-bold text-slate-300">Kontak terdaftar di sekolah</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Disamarkan</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
@@ -1112,7 +1112,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                        Nomor WhatsApp Wali Murid <span className="text-rose-400">*</span>
+                        Nomor WhatsApp wali murid <span className="text-rose-400">*</span>
                       </label>
                       <div className="relative">
                         <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -1129,8 +1129,8 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-                        <span>Email Wali Murid (Wajib untuk Penerimaan Tiket) <span className="text-rose-400">*</span></span>
-                        <span className="text-[10px] text-sky-400 font-normal">Kirim QR ke sini</span>
+                        <span>Email wali murid <span className="text-rose-400">*</span></span>
+                        <span className="text-[10px] text-sky-400 font-normal">Kode QR dikirim ke sini</span>
                       </label>
                       <div className="relative">
                         <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -1162,7 +1162,7 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                       className="px-4 py-2.5 rounded-xl text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center gap-2 transition"
                     >
                       <MessageCircle className="w-4 h-4 text-emerald-400" />
-                      <span>Data Salah? Hubungi Admin</span>
+                      <span>Data salah? Hubungi admin</span>
                     </a>
 
                     <div className="flex items-center gap-2 justify-end">
@@ -1182,12 +1182,12 @@ export default function SelfServicePortal({ eventId = null, eventInfo = null, on
                         {isSubmitting ? (
                           <>
                             <RefreshCw className="w-4 h-4 animate-spin" />
-                            <span>Mengirim Tiket...</span>
+                            <span>Mengirim tiket…</span>
                           </>
                         ) : (
                           <>
                             <Send className="w-4 h-4" />
-                            <span>Konfirmasi & Kirim Tiket</span>
+                            <span>Konfirmasi dan kirim</span>
                           </>
                         )}
                       </button>

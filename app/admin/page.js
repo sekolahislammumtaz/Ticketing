@@ -131,7 +131,7 @@ export default function AdminPage() {
       setAdminPassError('');
       setAdminPasswordInput('');
     } else {
-      setAdminPassError('Password Admin salah! (Default awal: simumtaz123)');
+      setAdminPassError('Password salah. Coba lagi.');
     }
   }
 
@@ -146,21 +146,21 @@ export default function AdminPage() {
     e.preventDefault();
     const div = adminSession?.division || 'Sekolah Islam Mumtaz';
     if (!verifyAdminPassword(div, changePassForm.oldPass)) {
-      setChangePassForm(prev => ({ ...prev, error: 'Password lama salah!' }));
+      setChangePassForm(prev => ({ ...prev, error: 'Password lama salah.' }));
       return;
     }
     if (!changePassForm.newPass || changePassForm.newPass.trim().length < 4) {
-      setChangePassForm(prev => ({ ...prev, error: 'Password baru minimal 4 karakter!' }));
+      setChangePassForm(prev => ({ ...prev, error: 'Password baru minimal 4 karakter.' }));
       return;
     }
     if (changePassForm.newPass !== changePassForm.confirmPass) {
-      setChangePassForm(prev => ({ ...prev, error: 'Konfirmasi password baru tidak cocok!' }));
+      setChangePassForm(prev => ({ ...prev, error: 'Konfirmasi password belum sama.' }));
       return;
     }
 
     try {
       updateAdminPassword(div, changePassForm.newPass);
-      setChangePassForm({ oldPass: '', newPass: '', confirmPass: '', error: '', success: 'Password berhasil diperbarui!' });
+      setChangePassForm({ oldPass: '', newPass: '', confirmPass: '', error: '', success: 'Password diperbarui.' });
       setTimeout(() => {
         setShowChangePassModal(false);
         setChangePassForm({ oldPass: '', newPass: '', confirmPass: '', error: '', success: '' });
@@ -204,7 +204,7 @@ export default function AdminPage() {
       await importStudents(parsed);
       const updatedList = await getStudents();
       setStudents(updatedList);
-      setShowImportSuccessToast(`Berhasil mengimpor ${parsed.length} master data siswa!`);
+      setShowImportSuccessToast(`Berhasil mengimpor ${parsed.length} data siswa.`);
       setTimeout(() => setShowImportSuccessToast(''), 4000);
     } catch (err) {
       console.error('Error importing students Excel:', err);
@@ -219,7 +219,7 @@ export default function AdminPage() {
   // Handle Reset Klaim Siswa
   async function handleResetStudentClaim(student) {
     const confirmReset = window.confirm(
-      `Apakah Anda yakin ingin me-reset klaim tiket untuk ananda ${student.student_name} (${student.class_name})? Tiket yang sudah terbit akan dibatalkan sehingga orang tua dapat memesan ulang.`
+      `Batalkan klaim tiket ananda ${student.student_name} (${student.class_name})? Semua tiket ananda ini dihapus supaya wali murid bisa memesan ulang.`
     );
     if (!confirmReset) return;
 
@@ -229,10 +229,10 @@ export default function AdminPage() {
       setStudents(updatedList);
       const pts = await getParticipants(eventInfo?.id);
       setParticipants(pts || []);
-      alert(`Klaim tiket ananda ${student.student_name} berhasil di-reset.`);
+      alert(`Klaim ananda ${student.student_name} dibatalkan.`);
     } catch (err) {
       console.error('Error resetting claim:', err);
-      alert('Gagal me-reset klaim: ' + err.message);
+      alert('Gagal membatalkan klaim: ' + err.message);
     }
   }
 
@@ -240,7 +240,7 @@ export default function AdminPage() {
   async function handleSaveNewStudent(e) {
     e.preventDefault();
     if (!newStudentForm.student_name.trim() || !newStudentForm.class_name.trim()) {
-      alert('Nama Siswa dan Kelas wajib diisi.');
+      alert('Nama siswa dan kelas wajib diisi.');
       return;
     }
 
@@ -280,7 +280,7 @@ export default function AdminPage() {
   // Trigger Send Ticket Email (Req: Kirim email tiket otomatis jika ada email)
   async function triggerSendTicketEmail(participant, silent = false) {
     if (!participant.email || !participant.email.includes('@')) {
-      if (!silent) alert('Peserta tidak memiliki alamat email yang valid.');
+      if (!silent) alert('Peserta belum punya email yang valid.');
       return;
     }
     setSendingEmailId(participant.id);
@@ -306,7 +306,7 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Send email error:', err);
-      if (!silent) alert(`Terjadi kesalahan pengiriman email: ${err.message}`);
+      if (!silent) alert(`Email gagal dikirim: ${err.message}`);
     } finally {
       setSendingEmailId(null);
     }
@@ -316,7 +316,7 @@ export default function AdminPage() {
   async function handleOpenWhatsApp(participant) {
     const url = createWhatsAppTicketUrl(participant, eventInfo);
     if (!url) {
-      alert('Nomor WhatsApp peserta tidak valid atau kosong.');
+      alert('Nomor WhatsApp peserta kosong atau tidak valid.');
       return;
     }
     window.open(url, '_blank');
@@ -338,7 +338,7 @@ export default function AdminPage() {
     try {
       const saved = await saveEventInfo(eventInfo);
       setEventInfo(saved);
-      alert('Detail Acara berhasil disimpan!');
+      alert('Detail acara disimpan.');
     } catch (err) {
       alert('Gagal menyimpan detail acara: ' + err.message);
     } finally {
@@ -359,7 +359,7 @@ export default function AdminPage() {
       const parsedList = parseExcelParticipants(arrayBuffer, existingCodes);
 
       if (parsedList.length === 0) {
-        alert('File Excel tidak berisi data peserta yang valid (pastikan ada kolom Nama & Divisi).');
+        alert('File Excel tidak berisi data peserta yang valid (pastikan ada kolom Nama dan Divisi).');
         return;
       }
 
@@ -372,13 +372,13 @@ export default function AdminPage() {
       // Trigger automatic email sending for imported participants with email
       const withEmail = imported.filter(p => p.email && p.email.includes('@'));
       if (withEmail.length > 0) {
-        setShowImportSuccessToast(`Mengimpor ${imported.length} peserta. Mengirim ${withEmail.length} email tiket otomatis...`);
+        setShowImportSuccessToast(`Mengimpor ${imported.length} peserta. Mengirim ${withEmail.length} email tiket…`);
         for (const p of withEmail) {
           await triggerSendTicketEmail(p, true);
         }
-        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta! Tiket QR otomatis dikirim ke ${withEmail.length} email.`);
+        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta. Tiket QR dikirim ke ${withEmail.length} email.`);
       } else {
-        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta baru dengan nomor tiket QR unik!`);
+        setShowImportSuccessToast(`Berhasil mengimpor ${imported.length} peserta.`);
       }
       setTimeout(() => setShowImportSuccessToast(''), 6000);
     } catch (err) {
@@ -393,7 +393,7 @@ export default function AdminPage() {
   async function handleAddParticipant(e) {
     e.preventDefault();
     if (!newParticipant.name || !newParticipant.division) {
-      alert('Nama dan Divisi wajib diisi!');
+      alert('Nama dan divisi wajib diisi.');
       return;
     }
 
@@ -418,9 +418,9 @@ export default function AdminPage() {
 
       if (created?.email && created?.email.includes('@')) {
         triggerSendTicketEmail(created, true);
-        alert(`Peserta "${created.name}" berhasil ditambahkan & email tiket otomatis dikirim!`);
+        alert(`Peserta "${created.name}" ditambahkan. Email tiket dikirim ke ${created.email}.`);
       } else {
-        alert(`Peserta "${created?.name || newParticipant.name}" berhasil ditambahkan!`);
+        alert(`Peserta "${created?.name || newParticipant.name}" ditambahkan.`);
       }
 
       const updated = await getParticipants(eventInfo.id);
@@ -447,7 +447,7 @@ export default function AdminPage() {
   async function handleSaveEditParticipant(e) {
     e.preventDefault();
     if (!editForm.name || !editForm.division) {
-      alert('Nama dan Divisi wajib diisi!');
+      alert('Nama dan divisi wajib diisi.');
       return;
     }
 
@@ -457,15 +457,15 @@ export default function AdminPage() {
 
       const updated = await getParticipants(eventInfo.id);
       setParticipants(updated);
-      alert('Data peserta berhasil diperbarui!');
+      alert('Data peserta diperbarui.');
     } catch (err) {
-      alert('Gagal meng-edit data peserta: ' + err.message);
+      alert('Gagal mengubah data peserta: ' + err.message);
     }
   }
 
   // Delete Single Participant (Req #12)
   async function handleDeleteParticipant(id, name) {
-    if (!confirm(`Hapus peserta "${name}"?`)) return;
+    if (!confirm(`Hapus peserta "${name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
     try {
       await deleteParticipant(id);
       setParticipants(prev => prev.filter(p => p.id !== id));
@@ -476,7 +476,7 @@ export default function AdminPage() {
 
   // Clear All Participants (Req #12)
   async function handleClearAll() {
-    if (!confirm('PERHATIAN: Apakah Anda yakin ingin MENGHAPUS SEMUA data peserta acara ini?')) return;
+    if (!confirm('Hapus semua data peserta acara ini? Semua tiket yang sudah terbit ikut terhapus dan tidak bisa dikembalikan.')) return;
     try {
       await clearAllParticipants();
       setParticipants([]);
@@ -503,7 +503,7 @@ export default function AdminPage() {
       : participants.filter(p => (p.division || 'Umum').trim().toLowerCase() === exportDivision.toLowerCase());
 
     if (filtered.length === 0) {
-      alert(`Tidak ada data peserta untuk divisi "${exportDivision}"!`);
+      alert(`Tidak ada peserta di divisi "${exportDivision}".`);
       return;
     }
 
@@ -609,7 +609,7 @@ export default function AdminPage() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4">
         <header className="py-4">
           <Link href="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
+            <ArrowLeft className="w-4 h-4" /> Kembali ke beranda
           </Link>
         </header>
 
@@ -617,7 +617,7 @@ export default function AdminPage() {
           <div className="text-center space-y-2">
             <AppLogo className="w-16 h-16 object-contain mx-auto drop-shadow mb-2" />
             <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
-            <p className="text-xs text-slate-400">Login Administrator Sekolah & Yayasan</p>
+            <p className="text-xs text-slate-400">Masuk admin sekolah dan yayasan</p>
           </div>
 
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-2xl space-y-4">
@@ -630,7 +630,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Pilih Divisi Admin</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Pilih divisi admin</label>
                 <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-xl p-2.5">
                   <div className="w-12 h-12 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center p-1.5 flex-shrink-0">
                     <DivisionLogo
@@ -652,25 +652,25 @@ export default function AdminPage() {
                     </select>
                     <p className="text-[11px] text-slate-400 truncate mt-0.5">
                       {loginDivision === 'Sekolah Islam Mumtaz' 
-                        ? 'Super Admin Yayasan (Akses Lintas Divisi)' 
-                        : `Admin Khusus ${loginDivision}`}
+                        ? 'Super admin yayasan (akses semua divisi)' 
+                        : `Admin ${loginDivision}`}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password Admin</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
                 <input
                   type="password"
                   required
-                  placeholder="Masukkan password admin"
+                  placeholder="Masukkan password"
                   value={adminPasswordInput}
                   onChange={e => setAdminPasswordInput(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500"
                 />
                 <p className="text-[11px] text-sky-400/90 mt-1">
-                  * Password default awal seluruh divisi: <code className="font-mono font-bold text-sky-300">simumtaz123</code>
+                  * Password awal semua divisi: <code className="font-mono font-bold text-sky-300">simumtaz123</code>
                 </p>
               </div>
 
@@ -678,7 +678,7 @@ export default function AdminPage() {
                 type="submit"
                 className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 font-semibold text-sm text-white transition-all shadow-lg shadow-sky-600/20 flex items-center justify-center gap-2 mt-2"
               >
-                <Lock className="w-4 h-4" /> Masuk Admin
+                <Lock className="w-4 h-4" /> Masuk
               </button>
             </form>
           </div>
@@ -700,7 +700,7 @@ export default function AdminPage() {
             <Link 
               href="/" 
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
-              title="Kembali ke Beranda"
+              title="Kembali ke beranda"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
@@ -736,8 +736,8 @@ export default function AdminPage() {
                 </div>
                 <p className="text-xs text-slate-400">
                   {adminSession?.isSuperAdmin 
-                    ? 'Akses Penuh: Seluruh Divisi Sekolah & Yayasan' 
-                    : `Data Terbatas: Divisi ${adminSession?.division}`}
+                    ? 'Akses penuh: semua divisi sekolah dan yayasan' 
+                    : `Data divisi ${adminSession?.division}`}
                 </p>
               </div>
             </div>
@@ -762,7 +762,7 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/10 text-sky-300 border border-sky-500/20 text-xs font-semibold hover:bg-sky-500/20 transition-all"
               >
                 <Lock className="w-3.5 h-3.5 text-sky-400" />
-                <span className="hidden sm:inline">User Scanner (Max 10)</span>
+                <span className="hidden sm:inline">User scanner (maks. 10)</span>
               </Link>
             )}
 
@@ -786,7 +786,7 @@ export default function AdminPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <strong className="text-amber-300 font-semibold block text-sm">Supabase Belum Dikonfigurasi</strong>
+                <strong className="text-amber-300 font-semibold block text-sm">Supabase belum dikonfigurasi</strong>
                 Aplikasi saat ini berjalan di mode <strong>Local Storage</strong>. Untuk menyambungkan ke database Supabase gratis di Vercel, masukkan <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-300">NEXT_PUBLIC_SUPABASE_URL</code> dan <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-300">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> di file <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-300">.env.local</code>. File SQL schema telah disediakan di folder <code className="bg-amber-950/60 px-1.5 py-0.5 rounded text-amber-300">supabase/schema.sql</code>.
               </div>
             </div>
@@ -804,7 +804,7 @@ export default function AdminPage() {
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>Daftar Tiket Diklaim ({scopedParticipants.length})</span>
+            <span>Daftar tiket diklaim ({scopedParticipants.length})</span>
           </button>
 
           <button
@@ -816,7 +816,7 @@ export default function AdminPage() {
             }`}
           >
             <GraduationCap className="w-4 h-4" />
-            <span>Master Data Siswa ({totalStudents})</span>
+            <span>Data siswa ({totalStudents})</span>
           </button>
 
           <button
@@ -828,7 +828,7 @@ export default function AdminPage() {
             }`}
           >
             <Calendar className="w-4 h-4" />
-            <span>Detail Acara</span>
+            <span>Detail acara</span>
           </button>
         </div>
 
@@ -841,15 +841,15 @@ export default function AdminPage() {
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Detail & Informasi Acara</h2>
-                  <p className="text-xs text-slate-400">Nama acara, tanggal, jam, dan lokasi tempat pelaksanaan</p>
+                  <h2 className="text-lg font-bold text-white">Detail dan informasi acara</h2>
+                  <p className="text-xs text-slate-400">Nama acara, tanggal, jam, dan lokasi</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleSaveEvent} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama Acara *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Nama acara *</label>
                 <input
                   type="text"
                   required
@@ -861,7 +861,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal Acara *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Tanggal acara *</label>
                 <input
                   type="date"
                   required
@@ -872,7 +872,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Waktu / Jam *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Jam acara *</label>
                 <input
                   type="text"
                   required
@@ -884,7 +884,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Lokasi Acara *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Lokasi *</label>
                 <input
                   type="text"
                   required
@@ -902,7 +902,7 @@ export default function AdminPage() {
                   className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-600/20 flex items-center gap-2"
                 >
                   {isSavingEvent ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Simpan Detail Acara
+                  Simpan detail acara
                 </button>
               </div>
             </form>
@@ -918,7 +918,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
               <div>
-                <p className="text-[11px] font-semibold text-slate-400">Total Tiket Terbit</p>
+                <p className="text-[11px] font-semibold text-slate-400">Total tiket terbit</p>
                 <p className="text-2xl font-black text-white mt-1">{scopedParticipants.length}</p>
                 <p className="text-[10px] text-slate-500 mt-0.5">Semua tiket yang diklaim</p>
               </div>
@@ -929,12 +929,12 @@ export default function AdminPage() {
 
             <div className="bg-slate-900/80 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-between shadow-lg">
               <div>
-                <p className="text-[11px] font-semibold text-slate-400">Kehadiran (Check-In)</p>
+                <p className="text-[11px] font-semibold text-slate-400">Kehadiran (check-in)</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <p className="text-2xl font-black text-emerald-400">{totalHadir}</p>
                   <span className="text-xs font-bold text-emerald-300">({attendanceRate}%)</span>
                 </div>
-                <p className="text-[10px] text-emerald-500/80 mt-0.5">Telah scan QR code</p>
+                <p className="text-[10px] text-emerald-500/80 mt-0.5">Sudah scan kode QR</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5" />
@@ -943,7 +943,7 @@ export default function AdminPage() {
 
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg">
               <div>
-                <p className="text-[11px] font-semibold text-slate-400">Belum Hadir</p>
+                <p className="text-[11px] font-semibold text-slate-400">Belum hadir</p>
                 <p className="text-2xl font-black text-slate-300 mt-1">{totalBelumHadir}</p>
                 <p className="text-[10px] text-slate-500 mt-0.5">Menunggu kedatangan</p>
               </div>
@@ -954,7 +954,7 @@ export default function AdminPage() {
 
             <div className="bg-slate-900/80 border border-blue-500/20 rounded-2xl p-4 flex items-center justify-between shadow-lg">
               <div>
-                <p className="text-[11px] font-semibold text-slate-400">WhatsApp Terkirim</p>
+                <p className="text-[11px] font-semibold text-slate-400">WhatsApp terkirim</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <p className="text-2xl font-black text-blue-400">{totalWaSent}</p>
                   <span className="text-[11px] text-slate-400">/ {scopedParticipants.length}</span>
@@ -976,7 +976,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
                 <h3 className="text-xs font-bold text-slate-200 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-amber-400" />
-                  Statistik Kehadiran per Divisi Sekolah (Monitoring Yayasan)
+                  Kehadiran per divisi sekolah (monitoring yayasan)
                 </h3>
                 <span className="text-[11px] text-slate-400">Real-Time</span>
               </div>
@@ -989,7 +989,7 @@ export default function AdminPage() {
                         {d.division}
                       </span>
                       <span className={`text-xs font-bold ${d.rate > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
-                        {d.rate}% Hadir
+                        {d.rate}% hadir
                       </span>
                     </div>
 
@@ -1015,7 +1015,7 @@ export default function AdminPage() {
               <div className="border-b border-slate-800/80 pb-2.5">
                 <h3 className="text-xs font-bold text-slate-200 flex items-center gap-2">
                   <Layers className="w-4 h-4 text-sky-400" />
-                  Pintu Masuk (Jalur Ikhwan vs Akhwat)
+                  Pintu masuk (jalur ikhwan vs akhwat)
                 </h3>
               </div>
 
@@ -1024,10 +1024,10 @@ export default function AdminPage() {
                 <div className="bg-slate-950/80 border border-blue-500/30 rounded-xl p-3.5 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
-                      🔵 Jalur Ikhwan (Navy)
+                      Jalur ikhwan (navy)
                     </span>
                     <span className="text-xs font-bold text-sky-400">
-                      {ikhwanHadir} / {ikhwanTickets.length} Hadir
+                      {ikhwanHadir} / {ikhwanTickets.length} hadir
                     </span>
                   </div>
                   <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -1042,10 +1042,10 @@ export default function AdminPage() {
                 <div className="bg-slate-950/80 border border-purple-500/30 rounded-xl p-3.5 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
-                      🟣 Jalur Akhwat (Ungu)
+                      Jalur akhwat (ungu)
                     </span>
                     <span className="text-xs font-bold text-purple-400">
-                      {akhwatHadir} / {akhwatTickets.length} Hadir
+                      {akhwatHadir} / {akhwatTickets.length} hadir
                     </span>
                   </div>
                   <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -1081,7 +1081,7 @@ export default function AdminPage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
                 <FileSpreadsheet className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-white text-base mb-1">Impor Data Peserta</h3>
+              <h3 className="font-bold text-white text-base mb-1">Impor data peserta</h3>
               <p className="text-xs text-slate-400">Unggah file Excel (.xlsx) dengan kolom: Nama, Divisi, WA, Email.</p>
             </div>
 
@@ -1107,23 +1107,23 @@ export default function AdminPage() {
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3">
                 <FileText className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-white text-base mb-1">Ekspor Tiket Word</h3>
-              <p className="text-xs text-slate-400 mb-3">Unduh dokumen Word (.docx) tiket QR per divisi / semua divisi.</p>
+              <h3 className="font-bold text-white text-base mb-1">Ekspor tiket Word</h3>
+              <p className="text-xs text-slate-400 mb-3">Unduh dokumen Word (.docx) berisi tiket QR, per divisi atau semua divisi.</p>
 
               {/* Division Selector */}
               <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-slate-400">Pilih Divisi Tiket:</label>
+                <label className="block text-[11px] font-semibold text-slate-400">Pilih divisi:</label>
                 <select
                   value={exportDivision}
                   onChange={e => setExportDivision(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-sky-300 focus:outline-none focus:border-sky-500 font-medium"
                 >
-                  <option value="ALL">Semua Divisi ({participants.length} Tiket)</option>
+                  <option value="ALL">Semua divisi ({participants.length} tiket)</option>
                   {uniqueDivisions.map((divName, idx) => {
                     const count = participants.filter(p => (p.division || 'Umum').trim().toLowerCase() === divName.toLowerCase()).length;
                     return (
                       <option key={idx} value={divName}>
-                        Divisi: {divName} ({count} Tiket)
+                        Divisi {divName} ({count} tiket)
                       </option>
                     );
                   })}
@@ -1136,7 +1136,7 @@ export default function AdminPage() {
               disabled={participants.length === 0}
               className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20"
             >
-              <Download className="w-4 h-4" /> Ekspor Tiket Word (.docx)
+              <Download className="w-4 h-4" /> Ekspor tiket Word (.docx)
             </button>
           </div>
 
@@ -1146,8 +1146,8 @@ export default function AdminPage() {
               <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-3">
                 <FileSpreadsheet className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-white text-base mb-1">Ekspor Excel Attendance</h3>
-              <p className="text-xs text-slate-400">Unduh laporan Excel berisi data lengkap + status kehadiran (Hadir/Belum).</p>
+              <h3 className="font-bold text-white text-base mb-1">Ekspor Excel kehadiran</h3>
+              <p className="text-xs text-slate-400">Unduh laporan Excel berisi data peserta dan status kehadiran.</p>
             </div>
 
             <button
@@ -1165,15 +1165,15 @@ export default function AdminPage() {
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3">
                 <UserPlus className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-white text-base mb-1">Tambah Peserta</h3>
-              <p className="text-xs text-slate-400">Tambah data 1 peserta secara manual ke sistem.</p>
+              <h3 className="font-bold text-white text-base mb-1">Tambah peserta</h3>
+              <p className="text-xs text-slate-400">Tambah 1 peserta tanpa impor Excel.</p>
             </div>
 
             <button
               onClick={() => setShowAddModal(true)}
               className="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20"
             >
-              <Plus className="w-4 h-4" /> Tambah Peserta Baru
+              <Plus className="w-4 h-4" /> Tambah peserta
             </button>
           </div>
         </section>
@@ -1184,13 +1184,13 @@ export default function AdminPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-sky-400" /> Daftar Tiket Peserta ({scopedParticipants.length})
+                <Users className="w-5 h-5 text-sky-400" /> Daftar tiket peserta ({scopedParticipants.length})
               </h2>
               <p className="text-xs text-slate-400">
-                Total Tiket: <strong className="text-white">{scopedParticipants.length}</strong> | 
+                Total tiket: <strong className="text-white">{scopedParticipants.length}</strong> | 
                 Hadir: <strong className="text-emerald-400">{totalHadir}</strong> | 
-                Belum Scan: <strong className="text-slate-400">{totalBelumHadir}</strong> | 
-                WA Terkirim: <strong className="text-blue-400">{totalWaSent}</strong>
+                Belum scan: <strong className="text-slate-400">{totalBelumHadir}</strong> | 
+                WA terkirim: <strong className="text-blue-400">{totalWaSent}</strong>
               </p>
             </div>
 
@@ -1201,7 +1201,7 @@ export default function AdminPage() {
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input
                   type="text"
-                  placeholder="Cari nama, divisi, kelas, tiket..."
+                  placeholder="Cari nama, divisi, kelas, tiket…"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-sky-500 w-full sm:w-56"
@@ -1254,7 +1254,7 @@ export default function AdminPage() {
                   }`}
                   title="Hanya yang sudah dikirim via WhatsApp"
                 >
-                  WA Sent ({totalWaSent})
+                  Terkirim ({totalWaSent})
                 </button>
                 <button
                   onClick={() => setWaFilter('UNSENT')}
@@ -1263,7 +1263,7 @@ export default function AdminPage() {
                   }`}
                   title="Hanya yang belum dikirim via WhatsApp"
                 >
-                  Belum WA ({totalWaUnsent})
+                  Belum terkirim ({totalWaUnsent})
                 </button>
               </div>
 
@@ -1271,7 +1271,7 @@ export default function AdminPage() {
                 <button
                   onClick={handleClearAll}
                   className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 text-xs transition-colors"
-                  title="Hapus Semua Peserta"
+                  title="Hapus semua peserta"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1286,8 +1286,8 @@ export default function AdminPage() {
                 <tr>
                   <th className="px-3.5 py-3">No</th>
                   <th className="px-3.5 py-3">Nama Siswa / Peserta</th>
-                  <th className="px-3.5 py-3">Divisi & Kelas</th>
-                  <th className="px-3.5 py-3">Tipe & Jalur Masuk</th>
+                  <th className="px-3.5 py-3">Divisi dan kelas</th>
+                  <th className="px-3.5 py-3">Tipe dan jalur masuk</th>
                   <th className="px-3.5 py-3">No. WhatsApp</th>
                   <th className="px-3.5 py-3">Email</th>
                   <th className="px-3.5 py-3">Kode Tiket</th>
@@ -1301,8 +1301,8 @@ export default function AdminPage() {
                   <tr>
                     <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
                       {scopedParticipants.length === 0 
-                        ? 'Belum ada data peserta/tiket. Silakan impor file Excel atau tunggu klaim wali murid.' 
-                        : 'Tidak ada data peserta yang cocok dengan pencarian/filter.'}
+                        ? 'Belum ada peserta. Impor file Excel atau tunggu klaim wali murid.' 
+                        : 'Tidak ada peserta yang cocok dengan pencarian atau filter.'}
                     </td>
                   </tr>
                 ) : (
@@ -1332,7 +1332,7 @@ export default function AdminPage() {
                               ? 'bg-purple-500/10 text-purple-300 border-purple-500/30' 
                               : 'bg-blue-500/10 text-sky-300 border-blue-500/30'
                           }`}>
-                            {p.track === 'Akhwat' ? '🟣 Akhwat' : '🔵 Ikhwan'}
+                            {p.track === 'Akhwat' ? 'Akhwat' : 'Ikhwan'}
                           </span>
                         </div>
                       </td>
@@ -1345,12 +1345,12 @@ export default function AdminPage() {
                       </td>
                       <td className="px-3.5 py-3 text-center">
                         {p.wa_sent ? (
-                          <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px] font-semibold" title="Tiket sudah berhasil dikirimkan via WhatsApp">
+                          <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded-full text-[11px] font-semibold" title="Tiket sudah dikirim via WhatsApp">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Terkirim
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[11px] font-semibold" title="Tiket belum dikirim via WhatsApp">
-                            Belum Dikirim
+                            Belum dikirim
                           </span>
                         )}
                       </td>
@@ -1360,7 +1360,7 @@ export default function AdminPage() {
                             <CheckCircle2 className="w-3.5 h-3.5" /> Hadir
                           </span>
                         ) : (
-                          <span className="text-slate-500 italic text-xs">Belum Scanned</span>
+                          <span className="text-slate-500 italic text-xs">Belum di-scan</span>
                         )}
                       </td>
                       <td className="px-3.5 py-3 text-center">
@@ -1373,7 +1373,7 @@ export default function AdminPage() {
                                   ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border-blue-500/30'
                                   : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30'
                               }`}
-                              title={p.wa_sent ? 'Kirim Ulang Tiket via WhatsApp (Sudah Pernah Dikirim)' : 'Kirim Tiket via WhatsApp (Belum Dikirim)'}
+                              title={p.wa_sent ? 'Kirim ulang tiket via WhatsApp' : 'Kirim tiket via WhatsApp'}
                             >
                               <MessageSquare className={`w-4 h-4 ${p.wa_sent ? 'text-blue-400' : 'text-emerald-400'}`} />
                             </button>
@@ -1383,7 +1383,7 @@ export default function AdminPage() {
                               onClick={() => triggerSendTicketEmail(p, false)}
                               disabled={sendingEmailId === p.id}
                               className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 disabled:opacity-50 transition-colors"
-                              title="Kirim / Resend Email Tiket"
+                              title="Kirim ulang email tiket"
                             >
                               {sendingEmailId === p.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                             </button>
@@ -1391,21 +1391,21 @@ export default function AdminPage() {
                           <button
                             onClick={() => openEditModal(p)}
                             className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                            title="Edit Data Peserta"
+                            title="Ubah data peserta"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => openQrModal(p)}
                             className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 transition-colors"
-                            title="Lihat QR Code Tiket"
+                            title="Lihat kode QR tiket"
                           >
                             <QrCode className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteParticipant(p.id, p.name)}
                             className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                            title="Hapus Peserta"
+                            title="Hapus peserta"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -1432,9 +1432,9 @@ export default function AdminPage() {
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3">
                     <Download className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-white text-base mb-1">Unduh Template Excel</h3>
+                  <h3 className="font-bold text-white text-base mb-1">Unduh template Excel</h3>
                   <p className="text-xs text-slate-400">
-                    Format Excel master siswa dengan kolom Divisi, Kelas, Nama Siswa, WhatsApp, dan Email.
+                    Template Excel data siswa: Divisi, Kelas, Nama Siswa, WhatsApp, Email.
                   </p>
                 </div>
                 <button
@@ -1451,9 +1451,9 @@ export default function AdminPage() {
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-white text-base mb-1">Impor Excel Siswa</h3>
+                  <h3 className="font-bold text-white text-base mb-1">Impor Excel siswa</h3>
                   <p className="text-xs text-slate-400">
-                    Unggah file Excel data siswa untuk klaim tiket mandiri oleh orang tua murid.
+                    Unggah file Excel data siswa. Wali murid memakai data ini untuk klaim tiket mandiri.
                   </p>
                 </div>
                 <input
@@ -1478,9 +1478,9 @@ export default function AdminPage() {
                   <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3">
                     <UserPlus className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-white text-base mb-1">Tambah Siswa Manual</h3>
+                  <h3 className="font-bold text-white text-base mb-1">Tambah siswa manual</h3>
                   <p className="text-xs text-slate-400">
-                    Tambahkan data 1 siswa baru secara manual ke database yayasan/sekolah.
+                    Tambah 1 siswa tanpa impor Excel.
                   </p>
                 </div>
                 <button
@@ -1496,7 +1496,7 @@ export default function AdminPage() {
                   }}
                   className="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20"
                 >
-                  <Plus className="w-4 h-4" /> Tambah Siswa Baru
+                  <Plus className="w-4 h-4" /> Tambah siswa
                 </button>
               </div>
             </div>
@@ -1507,12 +1507,12 @@ export default function AdminPage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-emerald-400" /> Master Data Siswa ({totalStudents})
+                    <GraduationCap className="w-5 h-5 text-emerald-400" /> Data siswa ({totalStudents})
                   </h2>
                   <p className="text-xs text-slate-400">
-                    Total Siswa: <strong className="text-white">{totalStudents}</strong> | 
-                    Sudah Klaim: <strong className="text-emerald-400">{totalStudentsClaimed}</strong> | 
-                    Belum Klaim: <strong className="text-amber-400">{totalStudentsUnclaimed}</strong>
+                    Total siswa: <strong className="text-white">{totalStudents}</strong> | 
+                    Sudah klaim: <strong className="text-emerald-400">{totalStudentsClaimed}</strong> | 
+                    Belum klaim: <strong className="text-amber-400">{totalStudentsUnclaimed}</strong>
                   </p>
                 </div>
 
@@ -1523,7 +1523,7 @@ export default function AdminPage() {
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
                       type="text"
-                      placeholder="Cari siswa, kelas, WA, email..."
+                      placeholder="Cari siswa, kelas, WA, email…"
                       value={studentSearch}
                       onChange={e => setStudentSearch(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 w-full sm:w-60"
@@ -1537,7 +1537,7 @@ export default function AdminPage() {
                       onChange={e => setStudentDivisionFilter(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-amber-300 focus:outline-none focus:border-emerald-500 font-medium"
                     >
-                      <option value="ALL">Semua Divisi Yayasan</option>
+                      <option value="ALL">Semua divisi</option>
                       {SCHOOL_DIVISIONS.map((div, idx) => (
                         <option key={idx} value={div}>{div}</option>
                       ))}
@@ -1551,7 +1551,7 @@ export default function AdminPage() {
                       onChange={e => setStudentClassFilter(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-sky-300 focus:outline-none focus:border-emerald-500 font-medium"
                     >
-                      <option value="ALL">Semua Kelas ({availableClasses.length})</option>
+                      <option value="ALL">Semua kelas ({availableClasses.length})</option>
                       {availableClasses.map((cls, idx) => (
                         <option key={idx} value={cls}>Kelas: {cls}</option>
                       ))}
@@ -1597,8 +1597,8 @@ export default function AdminPage() {
                       <th className="px-4 py-3">Divisi</th>
                       <th className="px-4 py-3">Kelas</th>
                       <th className="px-4 py-3">Nama Siswa</th>
-                      <th className="px-4 py-3">No. WhatsApp Ortu</th>
-                      <th className="px-4 py-3">Email Ortu</th>
+                      <th className="px-4 py-3">No. WhatsApp Wali</th>
+                      <th className="px-4 py-3">Email Wali</th>
                       <th className="px-4 py-3 text-center">Status Klaim Tiket</th>
                       <th className="px-4 py-3 text-center">Aksi</th>
                     </tr>
@@ -1608,8 +1608,8 @@ export default function AdminPage() {
                       <tr>
                         <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                           {scopedStudents.length === 0
-                            ? 'Belum ada data master siswa. Silakan unduh template & impor file Excel.'
-                            : 'Tidak ada data siswa yang cocok dengan pencarian/filter.'}
+                            ? 'Belum ada data siswa. Unduh template, lalu impor lewat Excel.'
+                            : 'Tidak ada siswa yang cocok dengan pencarian atau filter.'}
                         </td>
                       </tr>
                     ) : (
@@ -1628,11 +1628,11 @@ export default function AdminPage() {
                           <td className="px-4 py-3 text-center">
                             {s.is_claimed ? (
                               <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[11px] font-semibold">
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Sudah Diklaim ({s.tickets_count || 1} Tiket)
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Sudah klaim ({s.tickets_count || 1} tiket)
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full text-[11px]">
-                                Belum Diklaim
+                                Belum klaim
                               </span>
                             )}
                           </td>
@@ -1641,9 +1641,9 @@ export default function AdminPage() {
                               <button
                                 onClick={() => handleResetStudentClaim(s)}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold transition-colors"
-                                title="Reset status klaim agar orang tua dapat memesan ulang tiket"
+                                title="Batalkan klaim supaya wali murid bisa memesan ulang"
                               >
-                                <RotateCcw className="w-3.5 h-3.5" /> Reset Klaim
+                                <RotateCcw className="w-3.5 h-3.5" /> Batalkan klaim
                               </button>
                             ) : (
                               <span className="text-slate-500 italic text-xs">-</span>
@@ -1665,7 +1665,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-lg text-white">Tambah Peserta Manual</h3>
+              <h3 className="font-bold text-lg text-white">Tambah peserta manual</h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -1673,7 +1673,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleAddParticipant} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama Lengkap *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama lengkap *</label>
                 <input
                   type="text"
                   required
@@ -1685,11 +1685,11 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi / Bagian *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi *</label>
                 <input
                   type="text"
                   required
-                  placeholder="IT / Marketing / Tamu"
+                  placeholder="Contoh: SD Islam Nazhirah"
                   value={newParticipant.division}
                   onChange={e => setNewParticipant({ ...newParticipant, division: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
@@ -1697,7 +1697,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp (opsional)</label>
                 <input
                   type="text"
                   placeholder="08123456789"
@@ -1708,7 +1708,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Alamat Email (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Email (opsional)</label>
                 <input
                   type="email"
                   placeholder="budi@example.com"
@@ -1730,7 +1730,7 @@ export default function AdminPage() {
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/20"
                 >
-                  Simpan & Generate Tiket
+                  Simpan dan buat tiket
                 </button>
               </div>
             </form>
@@ -1752,7 +1752,7 @@ export default function AdminPage() {
               {qrModalDataUrl ? (
                 <img src={qrModalDataUrl} alt="QR Code" className="w-48 h-48 mx-auto" />
               ) : (
-                <div className="w-48 h-48 flex items-center justify-center text-slate-400 text-xs">Generating QR...</div>
+                <div className="w-48 h-48 flex items-center justify-center text-slate-400 text-xs">Membuat kode QR…</div>
               )}
             </div>
 
@@ -1766,7 +1766,7 @@ export default function AdminPage() {
 
             {showQrModal.status === 'Hadir' && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4" /> Telah Di-Scan (Hadir)
+                <CheckCircle2 className="w-4 h-4" /> Sudah di-scan (hadir)
               </div>
             )}
           </div>
@@ -1778,7 +1778,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-lg text-white">Edit Data Peserta</h3>
+              <h3 className="font-bold text-lg text-white">Ubah data peserta</h3>
               <button onClick={() => setShowEditModal(null)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -1786,7 +1786,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleSaveEditParticipant} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama Lengkap *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama lengkap *</label>
                 <input
                   type="text"
                   required
@@ -1797,7 +1797,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi / Bagian *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi *</label>
                 <input
                   type="text"
                   required
@@ -1808,7 +1808,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp (opsional)</label>
                 <input
                   type="text"
                   value={editForm.whatsapp}
@@ -1818,7 +1818,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Alamat Email (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Email (opsional)</label>
                 <input
                   type="email"
                   value={editForm.email}
@@ -1854,7 +1854,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-white">
                 <Key className="w-5 h-5 text-amber-400" />
-                <h3 className="font-bold text-lg">Ganti Password Admin</h3>
+                <h3 className="font-bold text-lg">Ganti password</h3>
               </div>
               <button 
                 onClick={() => setShowChangePassModal(false)}
@@ -1884,7 +1884,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Password Lama *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Password lama *</label>
                 <input
                   type="password"
                   required
@@ -1896,7 +1896,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Password Baru * (Min 4 karakter)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Password baru * (min. 4 karakter)</label>
                 <input
                   type="password"
                   required
@@ -1908,7 +1908,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Konfirmasi Password Baru *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Konfirmasi password baru *</label>
                 <input
                   type="password"
                   required
@@ -1931,7 +1931,7 @@ export default function AdminPage() {
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-lg shadow-amber-600/20"
                 >
-                  Simpan Password
+                  Simpan password
                 </button>
               </div>
             </form>
@@ -1946,7 +1946,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2 text-white">
                 <GraduationCap className="w-5 h-5 text-emerald-400" />
-                <h3 className="font-bold text-lg">Tambah Siswa Manual</h3>
+                <h3 className="font-bold text-lg">Tambah siswa manual</h3>
               </div>
               <button 
                 onClick={() => setShowAddStudentModal(false)}
@@ -1958,7 +1958,7 @@ export default function AdminPage() {
 
             <form onSubmit={handleSaveNewStudent} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi Sekolah *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi sekolah *</label>
                 {adminSession?.isSuperAdmin ? (
                   <select
                     value={newStudentForm.division}
@@ -1992,7 +1992,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama Siswa *</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Nama siswa *</label>
                 <input
                   type="text"
                   required
@@ -2004,7 +2004,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp Orang Tua (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">No. WhatsApp wali (opsional)</label>
                 <input
                   type="text"
                   placeholder="08123456789"
@@ -2015,10 +2015,10 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Email Orang Tua (Opsional)</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Email wali (opsional)</label>
                 <input
                   type="email"
-                  placeholder="ortu@example.com"
+                  placeholder="wali@example.com"
                   value={newStudentForm.parent_email}
                   onChange={e => setNewStudentForm(prev => ({ ...prev, parent_email: e.target.value }))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
@@ -2037,7 +2037,7 @@ export default function AdminPage() {
                   type="submit"
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20"
                 >
-                  Simpan Siswa
+                  Simpan siswa
                 </button>
               </div>
             </form>

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Calendar, MapPin, Clock, CheckCircle2, Ticket, QrCode, AlertCircle, Share2 } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, MapPin, Clock, CheckCircle2, Ticket, QrCode, AlertCircle, Share2, ArrowLeft } from 'lucide-react';
 import { getEventInfo, getParticipants } from '@/lib/data-service';
 import { generateQRCodeDataUrl } from '@/lib/ticket-generator';
 import AppLogo, { DivisionLogo } from '@/components/Logo';
@@ -33,7 +34,7 @@ export default function DigitalTicketPage() {
           const qr = await generateQRCodeDataUrl(found.ticket_code);
           setQrDataUrl(qr);
         } else {
-          setError('Tiket dengan kode tersebut tidak ditemukan.');
+          setError('Tiket dengan kode itu tidak ditemukan.');
         }
       } catch (err) {
         console.error('Error loading digital ticket:', err);
@@ -51,7 +52,7 @@ export default function DigitalTicketPage() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-slate-400">Memuat E-Tiket Digital...</p>
+          <p className="text-xs text-slate-400">Memuat e-tiket…</p>
         </div>
       </div>
     );
@@ -62,8 +63,11 @@ export default function DigitalTicketPage() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
           <AlertCircle className="w-12 h-12 text-amber-400 mx-auto" />
-          <h2 className="text-lg font-bold text-white">Tiket Tidak Ditemukan</h2>
+          <h2 className="text-lg font-bold text-white">Tiket tidak ditemukan</h2>
           <p className="text-xs text-slate-400">{error || 'Kode tiket tidak valid atau belum terdaftar.'}</p>
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:text-sky-300">
+            <ArrowLeft className="w-3.5 h-3.5" /> Buat tiket baru di beranda
+          </Link>
         </div>
       </div>
     );
@@ -101,7 +105,7 @@ export default function DigitalTicketPage() {
               )}
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-[11px] font-semibold tracking-wider uppercase mb-1">
-              <Ticket className="w-3.5 h-3.5" /> E-Tiket Resmi
+              <Ticket className="w-3.5 h-3.5" /> E-tiket resmi
             </div>
             <h1 className="text-xl font-black leading-tight">{eventInfo?.name || 'Kajian Akbar Yayasan Munazarah'}</h1>
             
@@ -111,7 +115,7 @@ export default function DigitalTicketPage() {
                 ? 'bg-purple-500/20 text-purple-200 border-purple-500/40' 
                 : 'bg-blue-500/20 text-sky-200 border-blue-500/40'
             }`}>
-              {isAkhwat ? '🟣 JALUR AKHWAT (PINTU MASUK UNGU)' : '🔵 JALUR IKHWAN (PINTU MASUK BIRU NAVY)'}
+              {isAkhwat ? 'Jalur akhwat (pintu ungu)' : 'Jalur ikhwan (pintu biru navy)'}
             </div>
           </div>
 
@@ -119,9 +123,9 @@ export default function DigitalTicketPage() {
           <div className="p-6 text-center space-y-4 bg-slate-900/60">
             <div className="bg-white p-4 rounded-2xl inline-block shadow-xl border border-slate-200">
               {qrDataUrl ? (
-                <img src={qrDataUrl} alt="QR Code Tiket" className="w-52 h-52 mx-auto" />
+                <img src={qrDataUrl} alt="Kode QR tiket" className="w-52 h-52 mx-auto" />
               ) : (
-                <div className="w-52 h-52 flex items-center justify-center text-slate-400 text-xs">Generating QR...</div>
+                <div className="w-52 h-52 flex items-center justify-center text-slate-400 text-xs">Membuat kode QR…</div>
               )}
             </div>
 
@@ -155,7 +159,7 @@ export default function DigitalTicketPage() {
             {/* Attendance Status Badge */}
             {participant.status === 'Hadir' ? (
               <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4" /> Telah Di-Scan (Hadir)
+                <CheckCircle2 className="w-4 h-4" /> Sudah di-scan (hadir)
               </div>
             ) : (
               <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border text-xs font-semibold ${
@@ -163,7 +167,7 @@ export default function DigitalTicketPage() {
                   ? 'bg-purple-500/10 text-purple-300 border-purple-500/30' 
                   : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
               }`}>
-                <QrCode className="w-4 h-4" /> Siap Di-Scan di Pintu Masuk
+                <QrCode className="w-4 h-4" /> Siap di-scan di pintu masuk
               </div>
             )}
           </div>
@@ -186,7 +190,7 @@ export default function DigitalTicketPage() {
         </div>
 
         <p className="text-center text-xs text-slate-500">
-          Simpan/Screenshot halaman ini dan tunjukkan QR-Code kepada petugas scanner di pintu masuk acara.
+          Simpan tangkapan layar halaman ini. Tunjukkan kode QR ke petugas di pintu masuk.
         </p>
       </main>
 

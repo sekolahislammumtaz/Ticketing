@@ -23,7 +23,7 @@ export default function ScannerLoginPage() {
       const user = await verifyScannerLogin(username, password);
 
       if (!user) {
-        setError('Username atau Password scanner salah!');
+        setError('Username atau password salah.');
         setLoading(false);
         return;
       }
@@ -32,7 +32,7 @@ export default function ScannerLoginPage() {
       localStorage.setItem('ticketing_active_scanner', JSON.stringify(user));
       router.push('/scan');
     } catch (err) {
-      setError('Terjadi kesalahan saat login: ' + err.message);
+      setError('Gagal masuk: ' + err.message);
       setLoading(false);
     }
   }
@@ -44,7 +44,7 @@ export default function ScannerLoginPage() {
           href="/" 
           className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Kembali ke Beranda
+          <ArrowLeft className="w-4 h-4" /> Kembali ke beranda
         </Link>
       </header>
 
@@ -52,7 +52,7 @@ export default function ScannerLoginPage() {
         <div className="text-center space-y-2">
           <AppLogo className="w-16 h-16 object-contain drop-shadow mx-auto mb-2" />
           <h1 className="text-xl font-extrabold text-white leading-tight">KAJIAN YAYASAN MUNAZARAH TICKETING</h1>
-          <p className="text-xs text-slate-400">Login Petugas Tiket Scanner</p>
+          <p className="text-xs text-slate-400">Masuk petugas scanner tiket</p>
         </div>
 
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-md shadow-2xl space-y-4">
@@ -65,7 +65,7 @@ export default function ScannerLoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Username Scanner</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Username</label>
               <input
                 type="text"
                 required
@@ -94,12 +94,12 @@ export default function ScannerLoginPage() {
               className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-semibold text-sm text-white transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 mt-2"
             >
               <LogIn className="w-4 h-4" />
-              {loading ? 'Memverifikasi...' : 'Masuk ke Scanner Kamera'}
+              {loading ? 'Memeriksa…' : 'Masuk'}
             </button>
           </form>
 
           <div className="text-center text-xs text-slate-500 pt-2">
-            Akun scanner dibuat melalui <Link href="/admin" className="text-sky-400 underline">Dashboard Admin</Link>.
+            Akun scanner dibuat di <Link href="/admin" className="text-sky-400 underline">halaman admin</Link>.
           </div>
         </div>
       </main>
