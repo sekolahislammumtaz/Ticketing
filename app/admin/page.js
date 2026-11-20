@@ -84,9 +84,11 @@ export default function AdminPage() {
   const [newParticipant, setNewParticipant] = useState({
     name: '',
     division: '',
+    gender: 'Ikhwan', // Ikhwan / Akhwat
     whatsapp: '',
     email: '',
   });
+  const [isAddingParticipant, setIsAddingParticipant] = useState(false);
 
   // Edit Participant Form State
   const [editForm, setEditForm] = useState({
@@ -389,28 +391,52 @@ export default function AdminPage() {
     }
   }
 
+  // Open Add Participant Modal with Auto Division & Default Gender
+  function handleOpenAddModal() {
+    const defaultDivision = adminSession?.division || 'TK Islam Nazhirah';
+    setNewParticipant({
+      name: '',
+      division: defaultDivision,
+      gender: 'Ikhwan',
+      whatsapp: '',
+      email: '',
+    });
+    setShowAddModal(true);
+  }
+
   // Handle Add Single Participant (Req #12)
   async function handleAddParticipant(e) {
     e.preventDefault();
+    if (isAddingParticipant) return;
+
     if (!newParticipant.name || !newParticipant.division) {
       alert('Nama dan divisi wajib diisi.');
       return;
     }
 
+    // Segera tutup modal & set loading agar tidak terinput 2x
+    setShowAddModal(false);
+    setIsAddingParticipant(true);
+
+    const pendingData = { ...newParticipant };
+    setNewParticipant({ name: '', division: '', gender: 'Ikhwan', whatsapp: '', email: '' });
+
     try {
       const existingCodes = new Set(participants.map(p => p.ticket_code));
       const ticketCode = generateTicketCode(existingCodes);
 
+      const track = pendingData.gender === 'Akhwat' ? 'Akhwat' : 'Ikhwan';
+      const ticketType = pendingData.gender === 'Akhwat' ? 'Akhwat' : 'Ikhwan';
+
       const created = await addParticipant(eventInfo.id, {
-        name: newParticipant.name,
-        division: newParticipant.division,
-        whatsapp: newParticipant.whatsapp,
-        email: newParticipant.email,
+        name: pendingData.name,
+        division: pendingData.division,
+        ticket_type: ticketType,
+        track: track,
+        whatsapp: pendingData.whatsapp,
+        email: pendingData.email,
         ticket_code: ticketCode,
       });
-
-      setNewParticipant({ name: '', division: '', whatsapp: '', email: '' });
-      setShowAddModal(false);
 
       if (created) {
         setParticipants(prev => [created, ...prev.filter(p => p.id !== created.id)]);
@@ -418,9 +444,9 @@ export default function AdminPage() {
 
       if (created?.email && created?.email.includes('@')) {
         triggerSendTicketEmail(created, true);
-        alert(`Peserta "${created.name}" ditambahkan. Email tiket dikirim ke ${created.email}.`);
+        alert(`Peserta "${created.name}" (${track}) berhasil ditambahkan. Email tiket dikirim ke ${created.email}.`);
       } else {
-        alert(`Peserta "${created?.name || newParticipant.name}" ditambahkan.`);
+        alert(`Peserta "${created?.name || pendingData.name}" (${track}) berhasil ditambahkan.`);
       }
 
       const updated = await getParticipants(eventInfo.id);
@@ -429,6 +455,8 @@ export default function AdminPage() {
       }
     } catch (err) {
       alert('Gagal menambah peserta: ' + err.message);
+    } finally {
+      setIsAddingParticipant(false);
     }
   }
 
@@ -1170,7 +1198,7 @@ export default function AdminPage() {
             </div>
 
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={handleOpenAddModal}
               className="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-purple-600/20"
             >
               <Plus className="w-4 h-4" /> Tambah peserta
@@ -1686,14 +1714,54 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Divisi *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: SD Islam Nazhirah"
-                  value={newParticipant.division}
-                  onChange={e => setNewParticipant({ ...newParticipant, division: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
-                />
+                {adminSession?.isSuperAdmin ? (
+                  <select
+                    value={newParticipant.division}
+                    onChange={e => setNewParticipant({ ...newParticipant, division: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                  >
+                    {SCHOOL_DIVISIONS.map(div => (
+                      <option key={div} value={div}>{div}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-sky-400 font-semibold">
+                    <span className="flex-1">{newParticipant.division || adminSession?.division}</span>
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                      Otomatis
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Jenis Kelamin *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewParticipant({ ...newParticipant, gender: 'Ikhwan' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      newParticipant.gender === 'Ikhwan'
+                        ? 'bg-blue-600/20 border-blue-500 text-blue-300 shadow-sm shadow-blue-500/20'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Ikhwan (Jalur Biru Navy)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewParticipant({ ...newParticipant, gender: 'Akhwat' })}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      newParticipant.gender === 'Akhwat'
+                        ? 'bg-purple-600/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/20'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    Akhwat (Jalur Ungu)
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -1728,9 +1796,10 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/20"
+                  disabled={isAddingParticipant}
+                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-semibold shadow-lg shadow-sky-600/20 flex items-center gap-2"
                 >
-                  Simpan dan buat tiket
+                  {isAddingParticipant ? 'Menyimpan…' : 'Simpan dan buat tiket'}
                 </button>
               </div>
             </form>
