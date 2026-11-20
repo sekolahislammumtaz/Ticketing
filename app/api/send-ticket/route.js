@@ -61,6 +61,12 @@ export async function POST(request) {
           errorCorrectionLevel: 'H',
         });
 
+        // Online public fallback QR URL (Gmail & Yahoo compatible)
+        const qrExternalUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=2&color=${isAkhwat ? '58-28-135' : '15-23-42'}&data=${encodeURIComponent(code)}`;
+
+        // Base64 raw content for CID inline attachment
+        const base64Content = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+
         return {
           ...t,
           ticket_type: rawType,
@@ -68,6 +74,8 @@ export async function POST(request) {
           isAkhwat,
           code,
           qrDataUrl,
+          qrExternalUrl,
+          base64Content,
         };
       })
     );
@@ -127,9 +135,9 @@ export async function POST(request) {
               ${theme.doorDesc}
             </p>
 
-            <!-- QR Code Container -->
+            <!-- QR Code Container (Universal email client compatible) -->
             <div style="background: #ffffff; padding: 12px; border-radius: 14px; display: inline-block; margin: 0 auto; box-shadow: 0 6px 16px rgba(0,0,0,0.35);">
-              <img src="${t.qrDataUrl}" alt="QR Code ${t.code}" width="180" height="180" style="display: block; margin: 0 auto;" />
+              <img src="${t.qrExternalUrl}" alt="QR Code ${t.code}" width="180" height="180" style="display: block; margin: 0 auto; border: 0; outline: none; text-decoration: none;" />
             </div>
 
             <!-- Ticket Code -->
@@ -230,6 +238,12 @@ export async function POST(request) {
         const { BrevoClient } = await import('@getbrevo/brevo');
         const brevo = new BrevoClient({ apiKey: brevoApiKey });
 
+        // Prepare attachments for offline download / backup
+        const emailAttachments = processedTickets.map((t, idx) => ({
+          name: `QR-${t.code}.png`,
+          content: t.base64Content,
+        }));
+
         const sendResult = await brevo.transactionalEmails.sendTransacEmail({
           subject: emailSubject,
           htmlContent: htmlContent,
@@ -238,6 +252,7 @@ export async function POST(request) {
             email: emailFromAddress,
           },
           to: [{ email: email, name: displayName }],
+          attachment: emailAttachments,
         });
 
         return NextResponse.json({
